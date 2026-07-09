@@ -430,11 +430,11 @@ const STEPS = [
   { scale:1,    body:"#ffd9b8", scarf:"#ff9d76", knot:"#ff8a5e", petal:"#ffc7cf", eyes:"dot",   mouth:"M94,79 Q100,85 106,79", cheek:0.6,
     msg:"짠! 오빠를 위한 선물! 🎁\n하나씩 열면서 편지를 확인해보세용!" },
   { scale:0.84, body:"#ffe6c2", scarf:"#ffb37a", knot:"#ff9d76", petal:"#ffd4a8", eyes:"dot",   mouth:"M93,79 Q100,87 107,79", cheek:0.65,
-    msg:"오늘 점심 메뉴는, \n뭘까요?" },
+    msg:"💛 오늘도 버그보다 네가 더 강해! \n화이팅 😊" },
   { scale:0.68, body:"#fff0d6", scarf:"#ffcf8f", knot:"#ffbf7a", petal:"#ffe3b8", eyes:"happy", mouth:"M92,78 Q100,89 108,78", cheek:0.7,
-    msg:"낯설고 서툰 건 당연한 거야!!!!\n지금 애쓰는 이 시간도 다 차곡차곡 쌓일거야 💪" },
+    msg:"💻 열심히 하는 네 모습이 정말 멋져. \n오늘도 응원할게!" },
   { scale:0.54, body:"#e9f5df", scarf:"#b7dd94", knot:"#a3cd80", petal:"#d5ecc0", eyes:"happy", mouth:"M91,78 Q100,91 109,78", cheek:0.75,
-    msg:"실수해도 괜찮아!\n완벽하지 않아도 언니는 존재 자체로 충분한 사람이니까 🌸" },
+    msg:"☕ 바쁜 하루도 잘 버티고, \n퇴근까지 힘내!" },
   { scale:0.42, body:"#e6ecff", scarf:"#a9bdf5", knot:"#93a9ec", petal:"#cdd8f8", eyes:"happy", mouth:"M90,77 Q100,93 110,77", cheek:0.8,
     isFinal:true }
 ];
@@ -442,12 +442,9 @@ const STEPS = [
 // 마지막 인형이 들고 있는 긴 편지 — 자유롭게 적어주세요.
 const LETTER_TEXT = `❤️경석이❤️에게,
 
-언니!!!! 언니가 이렇게 힘들어 하는건 처음 보는 것 같아서
-마음이 안 좋기도 하고, 언니의 인간미가 느껴지기도 하고 그래.
-새로운 환경과 새로운 사람과 새로운 업무들이
-다 낯설고 무거운 짐처럼 느껴지기도 할 것 같지만
-언제나 그랬듯 언니는 잘 해낼거라고 생각해!!!
-언니 곁에 늘 좋은 사람과 좋은 기운이 가득하기를 늘 응원해❤️
+이 번 하루도
+경 쾌하게 풀리고,
+석 양 지기 전에 퇴근하자! 💻
 
 - 승희 -`;
 
@@ -625,7 +622,7 @@ function currentText(){
 function openLetter(){
   const iconRect = letterIcon.getBoundingClientRect();
 
-  letterTitle.textContent = STEPS[idx].isFinal ? '채영언니에게 💌' : '작은 메모 🌷';
+  letterTitle.textContent = STEPS[idx].isFinal ? '❤️경석이❤️에게 💌' : '작은 메모 🌷';
   letterBody.textContent = currentText();
 
   letterCard.style.transition = 'none';
@@ -692,7 +689,7 @@ restartBtn.addEventListener('click', ()=>{
    화면 아래에 소복소복 쌓여요.
    ============================================================ */
 (function(){
-  const EMOJIS = ['💗','🌈','✨','🍀','⭐','🌸','💛','🩷'];
+  const EMOJIS = ['💚','🩷','🐷','🦖'];
   const layer = document.getElementById('confettiLayer');
   const COL_W = 30;               // 쌓임 계산용 칸 너비(px)
   const MAX_PILE = 150;           // 쌓임 최대 높이(px)
