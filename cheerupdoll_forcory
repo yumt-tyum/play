@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>❤️경석이❤️를 위한 응원상자</title>
+
+<!-- 검색엔진 색인 차단: 구글/네이버 검색 결과에 노출되지 않아요 -->
+<meta name="robots" content="noindex, nofollow">
+
+<!-- 카톡/문자 등으로 링크 공유 시 미리보기 문구 (자유롭게 수정하세요) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="❤️경석이❤️를 위한 응원상자 🎁">
+<meta property="og:description" content="하나씩 열어보면 작은 편지들이 기다리고 있어요 💌">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="❤️경석이❤️를 위한 응원상자 🎁">
+<meta name="twitter:description" content="하나씩 열어보면 작은 편지들이 기다리고 있어요 💌">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-top:#fff7ec;
+    --bg-bottom:#ffe9d6;
+    --ink:#7a5240;
+    --ink-soft:#a9806b;
+    --card:#fffaf3;
+    --shadow-light:#ffffff;
+    --shadow-dark:#e6c9ae;
+    --accent:#ff9d76;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(160deg,var(--bg-top),var(--bg-bottom));
+    font-family:'Gowun Dodum', sans-serif;
+    color:var(--ink);
+    overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .stage{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding:22px 10px 46px;
+  }
+  .title{
+    font-family:'Jua', sans-serif;
+    font-size:25px;
+    text-align:center;
+    line-height:1.45;
+    margin:0 0 4px;
+    text-shadow:1px 1px 0 var(--shadow-light);
+  }
+  .subtitle{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin:0 0 18px;
+  }
+  .dots{ display:flex; gap:8px; margin-bottom:14px; }
+  .sparkle-hint{
+    display:inline-block;
+    margin-top:5px;
+    font-size:12px;
+    color:#d99a6c;
+    animation: hintTwinkle 2.4s ease-in-out infinite;
+  }
+  @keyframes hintTwinkle{
+    0%,100%{ opacity:0.55; }
+    50%{ opacity:1; }
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#f3d9c4;
+    box-shadow: inset 1px 1px 2px rgba(180,120,80,0.35);
+    transition:all .35s ease;
+  }
+  .dot.filled{ background:var(--accent); box-shadow:0 0 0 3px rgba(255,157,118,0.25); }
+
+  /* ---- doll stage ---- */
+  .doll-stage{
+    position:relative;
+    width:min(346px, 100vw - 12px);
+    height:400px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .doll-scale{
+    position:relative;
+    width:320px;
+    height:392px;
+    transform-origin:bottom center;
+    transform: scale(var(--s,1));
+    cursor:pointer;
+    filter: drop-shadow(-6px -6px 10px rgba(255,255,255,0.55)) drop-shadow(8px 12px 16px rgba(180,120,80,0.35));
+  }
+  .doll-scale.wiggle{ animation: wiggle .55s ease-in-out; }
+  @keyframes wiggle{
+    0%,100%{ transform: scale(var(--s,1)) rotate(0deg); }
+    20%{ transform: scale(var(--s,1)) rotate(-6deg); }
+    40%{ transform: scale(var(--s,1)) rotate(5deg); }
+    60%{ transform: scale(var(--s,1)) rotate(-4deg); }
+    80%{ transform: scale(var(--s,1)) rotate(3deg); }
+  }
+  .doll-scale.pop{ animation: popIn .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn{
+    0%{ transform: scale(calc(var(--s,1) * 0.4)); opacity:0; }
+    60%{ transform: scale(calc(var(--s,1) * 1.08)); opacity:1; }
+    100%{ transform: scale(var(--s,1)); opacity:1; }
+  }
+  .doll-scale.nomore{ animation: shake .4s ease-in-out; }
+  @keyframes shake{
+    0%,100%{ transform: scale(var(--s,1)) translateX(0); }
+    25%{ transform: scale(var(--s,1)) translateX(-5px); }
+    75%{ transform: scale(var(--s,1)) translateX(5px); }
+  }
+
+  .clone-half{
+    position:absolute;
+    left:50%; bottom:0;
+    margin-left:-160px;
+    width:320px; height:392px;
+    transform-origin:bottom center;
+    pointer-events:none;
+  }
+
+  .letter-icon{ cursor:pointer; }
+
+  /* ---- 이음새 힌트 애니메이션 ---- */
+  #seamDash{
+    animation: dashMarch 1.2s linear infinite;
+  }
+  @keyframes dashMarch{
+    to{ stroke-dashoffset: -24; }
+  }
+  #seamGlow{
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+  @keyframes glowPulse{
+    0%,100%{ opacity:0.12; }
+    50%{ opacity:0.35; }
+  }
+  #seamArrowL{ animation: nudgeL 1.4s ease-in-out infinite; }
+  #seamArrowR{ animation: nudgeR 1.4s ease-in-out infinite; }
+  @keyframes nudgeL{
+    0%,100%{ transform: translate(0,0); }
+    50%{ transform: translate(3px,4px); }
+  }
+  @keyframes nudgeR{
+    0%,100%{ transform: translate(0,0); }
+    50%{ transform: translate(-3px,4px); }
+  }
+
+  /* "편지를 눌러보세요" 말풍선 태그
+     인형(.doll-scale) 밖, .doll-stage 기준으로 배치.
+     봉투 위-오른쪽(얼굴 옆 스카프 위)에 떠서 아래(봉투)를 가리킴.
+     기준: 뷰박스 245, 화면 배율 392/245 = 1.6
+     - 봉투 윗변 y=100 → 바닥에서 145vb*1.6 = 232px
+     - 얼굴 오른쪽 가장자리 x=134 → 중앙에서 34vb*1.6 ≈ 54px */
+  .letter-tag{
+    position:absolute;
+    left: calc(50% + 54px * var(--s,1));
+    bottom: calc(232px * var(--s,1) + 8px);
+    background:#fffaf3;
+    border-radius:14px;
+    padding:7px 13px;
+    font-family:'Jua', sans-serif;
+    font-size:13px;
+    color:#e2643f;
+    white-space:nowrap;
+    box-shadow:
+      -3px -3px 8px rgba(255,255,255,0.8),
+      3px 5px 10px rgba(210,150,110,0.4);
+    pointer-events:none;
+    z-index:5;
+  }
+  .letter-tag .inner{
+    display:block;
+    animation: tagBob 1.6s ease-in-out infinite;
+  }
+  .letter-tag::after{
+    content:'';
+    position:absolute;
+    bottom:-6px; left:16px;
+    border:6px solid transparent;
+    border-top-color:#fffaf3;
+    border-bottom:none;
+  }
+  @keyframes tagBob{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-5px); }
+  }
+
+  .hint{
+    margin-top:20px;
+    font-size:13px;
+    color:var(--ink-soft);
+    text-align:center;
+    line-height:1.6;
+  }
+
+  .restart{
+    margin-top:26px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+  }
+
+  /* ---- 터치 컨페티 (떨어져서 바닥에 쌓이는 이모티콘) ---- */
+  #confettiLayer{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:40; /* 모달(50)보다는 아래 */
+    overflow:hidden;
+  }
+  .confetti{
+    position:absolute;
+    left:0; top:0;
+    will-change: transform;
+    user-select:none;
+  }
+  .confetti.landed{
+    transition: opacity 1s ease;
+  }
+
+  /* ---- modal (note / letter) ---- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(122,82,64,0.35);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+    backdrop-filter: blur(2px);
+    opacity:0;
+    transition: opacity .3s ease;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-overlay.visible{ opacity:1; }
+
+  .letter-card{
+    position:fixed;
+    background: var(--card);
+    overflow:hidden;
+    box-shadow:
+      -10px -10px 22px var(--shadow-light),
+      10px 14px 30px var(--shadow-dark);
+    transition: top .45s cubic-bezier(.34,1.2,.64,1), left .45s cubic-bezier(.34,1.2,.64,1),
+                width .45s cubic-bezier(.34,1.2,.64,1), height .45s cubic-bezier(.34,1.2,.64,1),
+                border-radius .45s ease, opacity .25s ease;
+  }
+  .letter-inner{
+    padding:30px 26px;
+    max-height:100%;
+    overflow-y:auto;
+    opacity:0;
+    transition: opacity .25s ease;
+  }
+  .letter-inner.show{ opacity:1; }
+
+  .letter-title{
+    font-family:'Jua', sans-serif;
+    font-size:18px;
+    text-align:center;
+    margin:0 0 16px;
+  }
+  .letter-body{
+    white-space:pre-wrap;
+    font-size:15.5px;
+    line-height:1.85;
+    color:var(--ink);
+  }
+  .close-btn{
+    display:block;
+    margin:24px auto 0;
+    font-family:'Jua', sans-serif;
+    font-size:14px;
+    padding:10px 22px;
+    border:none;
+    border-radius:16px;
+    background:#f3d9c4;
+    color:var(--ink);
+    cursor:pointer;
+    box-shadow: inset 1px 1px 3px rgba(180,120,80,0.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <h1 class="title">❤️경석이❤️를 위한<br>응원상자 🎁</h1>
+  <p class="subtitle">인형 몸통을 누르면 뚜껑이 열리고,<br>손에 든 편지를 누르면 메모가 나와요<br><span class="sparkle-hint">✨ 빈 곳을 톡톡 누르면 반짝이가 쌓여요 ✨</span></p>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="doll-stage" id="dollStage" style="--s:1">
+    <div class="doll-scale" id="dollScale" style="--s:1">
+      <svg id="dollSvg" viewBox="0 0 200 245" width="320" height="392" xmlns="http://www.w3.org/2000/svg">
+        <!-- 몸통 -->
+        <path id="bodyPath" d="M44,232 C14,155 24,62 100,14 C176,62 186,155 156,232 Z" fill="#ffd9b8"/>
+
+        <!-- 머릿수건(스카프): 머리 전체를 감싸는 부분 -->
+        <path id="scarfPath" d="M100,12 C165,48 174,104 168,122 C146,134 54,134 32,122 C26,104 35,48 100,12 Z" fill="#ff9d76"/>
+
+        <!-- 얼굴 (크림색 타원) -->
+        <ellipse cx="100" cy="66" rx="34" ry="32" fill="#fff4e6"/>
+        <!-- 얼굴 테두리(스카프 라인) -->
+        <ellipse cx="100" cy="66" rx="34" ry="32" fill="none" stroke="rgba(122,82,64,0.18)" stroke-width="2"/>
+
+        <!-- 앞머리 -->
+        <path id="bangsPath" d="M70,52 Q78,36 100,38 Q122,36 130,52 Q118,44 100,46 Q82,44 70,52 Z" fill="#9c6b4a"/>
+
+        <!-- 스카프 매듭 (턱 아래 리본) -->
+        <g id="knotGroup" transform="translate(100,101)">
+          <circle cx="0" cy="0" r="6" fill="#ff8a5e" id="knotC"/>
+          <path d="M-6,0 Q-18,4 -16,14 Q-8,12 -3,5 Z" fill="#ff8a5e" id="knotL"/>
+          <path d="M6,0 Q18,4 16,14 Q8,12 3,5 Z" fill="#ff8a5e" id="knotR"/>
+        </g>
+
+        <!-- 눈: 크고 반짝이는 눈 -->
+        <g id="eyesDot">
+          <circle cx="85" cy="66" r="6" fill="#5e4030"/>
+          <circle cx="115" cy="66" r="6" fill="#5e4030"/>
+          <circle cx="87" cy="63.5" r="2.1" fill="#fff"/>
+          <circle cx="117" cy="63.5" r="2.1" fill="#fff"/>
+          <circle cx="83.5" cy="68" r="1.1" fill="#fff" opacity="0.8"/>
+          <circle cx="113.5" cy="68" r="1.1" fill="#fff" opacity="0.8"/>
+        </g>
+        <g id="eyesHappy" style="display:none">
+          <path d="M77,68 Q85,57 93,68" stroke="#5e4030" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+          <path d="M107,68 Q115,57 123,68" stroke="#5e4030" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- 볼터치 -->
+        <circle id="cheekL" cx="72" cy="76" r="6.5" fill="#ffb3a0" opacity="0.6"/>
+        <circle id="cheekR" cx="128" cy="76" r="6.5" fill="#ffb3a0" opacity="0.6"/>
+
+        <!-- 입 -->
+        <path id="mouthPath" d="M94,79 Q100,85 106,79" stroke="#5e4030" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+        <!-- 배 부분 앞치마 + 꽃 장식 -->
+        <g id="apronGroup">
+          <ellipse id="apronPath" cx="100" cy="190" rx="50" ry="40" fill="#fff4e6"/>
+          <ellipse cx="100" cy="190" rx="50" ry="40" fill="none" stroke="rgba(122,82,64,0.15)" stroke-width="2"/>
+          <!-- 꽃: 가운데 + 꽃잎 5장 -->
+          <g id="flowerGroup" transform="translate(100,190)">
+            <circle cx="0" cy="-13" r="7" fill="#ffc7cf" class="petal"/>
+            <circle cx="12.4" cy="-4" r="7" fill="#ffc7cf" class="petal"/>
+            <circle cx="7.6" cy="10.5" r="7" fill="#ffc7cf" class="petal"/>
+            <circle cx="-7.6" cy="10.5" r="7" fill="#ffc7cf" class="petal"/>
+            <circle cx="-12.4" cy="-4" r="7" fill="#ffc7cf" class="petal"/>
+            <circle cx="0" cy="0" r="6" fill="#ffce7a"/>
+          </g>
+          <!-- 잎사귀 -->
+          <path d="M78,204 Q68,210 70,220 Q80,216 82,208 Z" fill="#b7dd94" opacity="0.85"/>
+          <path d="M122,204 Q132,210 130,220 Q120,216 118,208 Z" fill="#b7dd94" opacity="0.85"/>
+        </g>
+
+        <!-- ===== 가로 이음새(금): 여기로 갈라져요 ===== -->
+        <g id="seamGroup">
+          <!-- 은은한 글로우 (숨쉬듯 깜빡임) -->
+          <path id="seamGlow" d="M32,150 Q100,162 168,150" stroke="#ff9d76" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.25"/>
+          <!-- 홈 하이라이트 -->
+          <path d="M32,153 Q100,165 168,153" stroke="rgba(255,255,255,0.8)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+          <!-- 움직이는 점선 (자르는 선 느낌) -->
+          <path id="seamDash" d="M32,150 Q100,162 168,150" stroke="rgba(122,82,64,0.5)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-dasharray="7 5"/>
+          <!-- 양옆에서 이음새를 가리키는 작은 화살표 -->
+          <path id="seamArrowL" d="M22,138 L28,146 L20,147 Z" fill="#ff9d76" opacity="0.9"/>
+          <path id="seamArrowR" d="M178,138 L172,146 L180,147 Z" fill="#ff9d76" opacity="0.9"/>
+        </g>
+
+        <!-- ===== 손 + 봉투 (이음새 위) ===== -->
+        <g id="letterIcon" class="letter-icon" transform="translate(100,120)">
+          <ellipse cx="-42" cy="12" rx="13" ry="9.5" fill="#ffd9b8" id="handL" stroke="rgba(122,82,64,0.15)" stroke-width="1.5"/>
+          <ellipse cx="42" cy="12" rx="13" ry="9.5" fill="#ffd9b8" id="handR" stroke="rgba(122,82,64,0.15)" stroke-width="1.5"/>
+          <g transform="translate(-33,-20)">
+            <rect width="66" height="42" rx="6" fill="#fff6e8" stroke="#e2a97e" stroke-width="2"/>
+            <path d="M2,4 L33,27 L64,4" stroke="#e2a97e" stroke-width="2" fill="none" stroke-linejoin="round"/>
+            <g transform="translate(33,25)">
+              <path d="M0,4 C-1.5,1 -6,0 -6,-3.5 C-6,-6 -4,-7.5 -2,-7.5 C-0.8,-7.5 0,-6.8 0,-6 C0,-6.8 0.8,-7.5 2,-7.5 C4,-7.5 6,-6 6,-3.5 C6,0 1.5,1 0,4 Z" fill="#ff8a70"/>
+            </g>
+            <g fill="#ffce7a">
+              <path d="M-9,-5 L-7.7,-2 L-4.7,-0.7 L-7.7,0.6 L-9,3.6 L-10.3,0.6 L-13.3,-0.7 L-10.3,-2 Z"/>
+              <path d="M72,8 L73,10.4 L75.4,11.4 L73,12.4 L72,14.8 L71,12.4 L68.6,11.4 L71,10.4 Z"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- 말풍선은 인형 스케일 밖(스테이지)에 배치 -->
+    <div class="letter-tag" id="letterTag"><span class="inner">편지를 눌러보세요 💌</span></div>
+  </div>
+
+  <p class="hint" id="hint">인형 몸통을 톡 눌러보세요 👆</p>
+
+  <button class="restart" id="restartBtn" style="display:none;">처음부터 다시 열어보기</button>
+</div>
+
+<div id="confettiLayer"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="letter-card" id="letterCard">
+    <div class="letter-inner" id="letterInner">
+      <p class="letter-title" id="letterTitle">❤️경석이❤️에게 💌</p>
+      <div class="letter-body" id="letterBody"></div>
+      <button class="close-btn" id="closeBtn">살며시 접어두기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   커스터마이즈 포인트
+   1) STEPS: 인형마다 색(body/scarf/knot/petal)/표정/짧은 메모
+   2) LETTER_TEXT: 마지막(가장 작은) 인형이 들고 있는 긴 편지
+   ============================================================ */
+
+const STEPS = [
+  { scale:1,    body:"#ffd9b8", scarf:"#ff9d76", knot:"#ff8a5e", petal:"#ffc7cf", eyes:"dot",   mouth:"M94,79 Q100,85 106,79", cheek:0.6,
+    msg:"짠! 오빠를 위한 선물! 🎁\n하나씩 열면서 편지를 확인해보세용!" },
+  { scale:0.84, body:"#ffe6c2", scarf:"#ffb37a", knot:"#ff9d76", petal:"#ffd4a8", eyes:"dot",   mouth:"M93,79 Q100,87 107,79", cheek:0.65,
+    msg:"오늘 점심 메뉴는, \n뭘까요?" },
+  { scale:0.68, body:"#fff0d6", scarf:"#ffcf8f", knot:"#ffbf7a", petal:"#ffe3b8", eyes:"happy", mouth:"M92,78 Q100,89 108,78", cheek:0.7,
+    msg:"낯설고 서툰 건 당연한 거야!!!!\n지금 애쓰는 이 시간도 다 차곡차곡 쌓일거야 💪" },
+  { scale:0.54, body:"#e9f5df", scarf:"#b7dd94", knot:"#a3cd80", petal:"#d5ecc0", eyes:"happy", mouth:"M91,78 Q100,91 109,78", cheek:0.75,
+    msg:"실수해도 괜찮아!\n완벽하지 않아도 언니는 존재 자체로 충분한 사람이니까 🌸" },
+  { scale:0.42, body:"#e6ecff", scarf:"#a9bdf5", knot:"#93a9ec", petal:"#cdd8f8", eyes:"happy", mouth:"M90,77 Q100,93 110,77", cheek:0.8,
+    isFinal:true }
+];
+
+// 마지막 인형이 들고 있는 긴 편지 — 자유롭게 적어주세요.
+const LETTER_TEXT = `❤️경석이❤️에게,
+
+언니!!!! 언니가 이렇게 힘들어 하는건 처음 보는 것 같아서
+마음이 안 좋기도 하고, 언니의 인간미가 느껴지기도 하고 그래.
+새로운 환경과 새로운 사람과 새로운 업무들이
+다 낯설고 무거운 짐처럼 느껴지기도 할 것 같지만
+언제나 그랬듯 언니는 잘 해낼거라고 생각해!!!
+언니 곁에 늘 좋은 사람과 좋은 기운이 가득하기를 늘 응원해❤️
+
+- 승희 -`;
+
+/* ============================================================ */
+
+let idx = 0;
+let animating = false;
+// 이음새 y좌표 비율 (뷰박스 245 기준, 이음새 곡선 중앙 y≈156 → 156/245 ≈ 0.635)
+const SEAM_RATIO = 0.635;
+
+const dollStage = document.getElementById('dollStage');
+const dollScale = document.getElementById('dollScale');
+const bodyPath = document.getElementById('bodyPath');
+const scarfPath = document.getElementById('scarfPath');
+const knotC = document.getElementById('knotC');
+const knotL = document.getElementById('knotL');
+const knotR = document.getElementById('knotR');
+const cheekL = document.getElementById('cheekL');
+const cheekR = document.getElementById('cheekR');
+const eyesDot = document.getElementById('eyesDot');
+const eyesHappy = document.getElementById('eyesHappy');
+const mouthPath = document.getElementById('mouthPath');
+const handL = document.getElementById('handL');
+const handR = document.getElementById('handR');
+const letterIcon = document.getElementById('letterIcon');
+const letterTag = document.getElementById('letterTag');
+const hint = document.getElementById('hint');
+const dotsEl = document.getElementById('dots');
+const restartBtn = document.getElementById('restartBtn');
+
+const modalOverlay = document.getElementById('modalOverlay');
+const letterCard = document.getElementById('letterCard');
+const letterInner = document.getElementById('letterInner');
+const letterTitle = document.getElementById('letterTitle');
+const letterBody = document.getElementById('letterBody');
+const closeBtn = document.getElementById('closeBtn');
+
+function buildDots(){
+  dotsEl.innerHTML = '';
+  for(let i=0;i<STEPS.length;i++){
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot'+i;
+    dotsEl.appendChild(d);
+  }
+}
+buildDots();
+
+function applyStep(step, animatePop){
+  dollScale.style.setProperty('--s', step.scale);
+  dollStage.style.setProperty('--s', step.scale); // 말풍선 위치 계산용
+  bodyPath.setAttribute('fill', step.body);
+  scarfPath.setAttribute('fill', step.scarf);
+  knotC.setAttribute('fill', step.knot);
+  knotL.setAttribute('fill', step.knot);
+  knotR.setAttribute('fill', step.knot);
+  handL.setAttribute('fill', step.body);
+  handR.setAttribute('fill', step.body);
+  document.querySelectorAll('#flowerGroup .petal').forEach(p => p.setAttribute('fill', step.petal));
+  cheekL.setAttribute('opacity', step.cheek);
+  cheekR.setAttribute('opacity', step.cheek);
+  mouthPath.setAttribute('d', step.mouth);
+  eyesDot.style.display = (step.eyes === 'happy') ? 'none' : '';
+  eyesHappy.style.display = (step.eyes === 'happy') ? '' : 'none';
+  // 마지막 인형은 더 갈라지지 않으므로 이음새 힌트 숨김
+  const hintEls = ['seamGlow','seamArrowL','seamArrowR'];
+  hintEls.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = step.isFinal ? 'none' : '';
+  });
+  if(animatePop){
+    dollScale.classList.remove('pop'); void dollScale.offsetWidth;
+    dollScale.classList.add('pop');
+  }
+}
+
+applyStep(STEPS[0], false);
+markDot(0);
+
+function markDot(i){
+  const d = document.getElementById('dot'+i);
+  if(d) d.classList.add('filled');
+}
+
+/* ---- 인형 클릭: 흔들 -> 뚜껑이 위로 열리며 -> 다음 인형 ---- */
+dollStage.addEventListener('click', (e) => {
+  if(animating) return;
+  if(e.target.closest('#letterIcon')) return;
+
+  if(idx >= STEPS.length - 1){
+    dollScale.classList.remove('nomore'); void dollScale.offsetWidth;
+    dollScale.classList.add('nomore');
+    hint.textContent = '이 안에는 편지만 있어요. 손에 든 편지를 눌러보세요 💌';
+    return;
+  }
+
+  animating = true;
+  hint.style.display = 'none';
+  letterTag.style.display = 'none';
+
+  dollScale.classList.add('wiggle');
+  setTimeout(() => {
+    dollScale.classList.remove('wiggle');
+    splitDoll();
+  }, 550);
+});
+
+function splitDoll(){
+  const s = STEPS[idx].scale;
+  const svgHTML = document.getElementById('dollSvg').outerHTML;
+
+  const top = document.createElement('div');
+  const bottom = document.createElement('div');
+  [top,bottom].forEach(el=>{
+    el.className = 'clone-half';
+    el.innerHTML = svgHTML;
+    const sv = el.querySelector('svg');
+    sv.removeAttribute('id');
+    sv.style.width = '320px';
+    sv.style.height = '392px';
+  });
+
+  const topPct = (SEAM_RATIO*100).toFixed(1);
+  const botPct = (100 - SEAM_RATIO*100).toFixed(1);
+  top.style.clipPath = `inset(0 0 ${botPct}% 0)`;
+  bottom.style.clipPath = `inset(${topPct}% 0 0 0)`;
+  top.style.transform = `scale(${s})`;
+  bottom.style.transform = `scale(${s})`;
+  top.style.transition = 'transform .55s cubic-bezier(.4,0,.2,1), opacity .55s ease';
+  bottom.style.transition = 'transform .55s cubic-bezier(.4,0,.2,1), opacity .55s ease';
+
+  dollScale.style.opacity = '0';
+  dollStage.appendChild(top);
+  dollStage.appendChild(bottom);
+
+  requestAnimationFrame(()=>{
+    top.style.transform = `scale(${s}) translateY(-90px) rotate(-14deg) translateX(-18px)`;
+    top.style.opacity = '0';
+    bottom.style.transform = `scale(${s}) translateY(26px)`;
+    bottom.style.opacity = '0';
+  });
+
+  setTimeout(()=>{
+    top.remove(); bottom.remove();
+    idx++;
+    applyStep(STEPS[idx], true);
+    dollScale.style.opacity = '1';
+    letterTag.style.display = '';
+    markDot(idx);
+    animating = false;
+    if(idx === STEPS.length - 1){
+      letterTag.querySelector('.inner').textContent = '마지막 편지예요! 눌러보세요 💌';
+      hint.textContent = '가장 작은 인형이에요';
+      hint.style.display = 'block';
+      restartBtn.style.display = 'inline';
+    } else {
+      hint.textContent = '인형 몸통을 톡 눌러보세요 👆';
+      hint.style.display = 'block';
+    }
+  }, 570);
+}
+
+/* ---- 편지: 펼쳐지기 / 접혀서 복귀 ---- */
+letterIcon.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if(animating) return;
+  openLetter();
+});
+
+function currentText(){
+  const step = STEPS[idx];
+  return step.isFinal ? LETTER_TEXT : step.msg;
+}
+
+function openLetter(){
+  const iconRect = letterIcon.getBoundingClientRect();
+
+  letterTitle.textContent = STEPS[idx].isFinal ? '채영언니에게 💌' : '작은 메모 🌷';
+  letterBody.textContent = currentText();
+
+  letterCard.style.transition = 'none';
+  letterCard.style.top = iconRect.top + 'px';
+  letterCard.style.left = iconRect.left + 'px';
+  letterCard.style.width = iconRect.width + 'px';
+  letterCard.style.height = iconRect.height + 'px';
+  letterCard.style.borderRadius = '8px';
+  letterCard.style.opacity = '1';
+  letterInner.classList.remove('show');
+
+  modalOverlay.classList.add('show');
+  requestAnimationFrame(()=>{
+    modalOverlay.classList.add('visible');
+    void letterCard.offsetWidth;
+    letterCard.style.transition = 'top .45s cubic-bezier(.34,1.2,.64,1), left .45s cubic-bezier(.34,1.2,.64,1), width .45s cubic-bezier(.34,1.2,.64,1), height .45s cubic-bezier(.34,1.2,.64,1), border-radius .45s ease';
+
+    const w = Math.min(440, window.innerWidth - 48);
+    const h = Math.min(520, window.innerHeight - 100);
+    letterCard.style.top = ((window.innerHeight - h)/2) + 'px';
+    letterCard.style.left = ((window.innerWidth - w)/2) + 'px';
+    letterCard.style.width = w + 'px';
+    letterCard.style.height = h + 'px';
+    letterCard.style.borderRadius = '24px';
+
+    setTimeout(()=> letterInner.classList.add('show'), 280);
+  });
+}
+
+function closeLetter(){
+  const iconRect = letterIcon.getBoundingClientRect();
+  letterInner.classList.remove('show');
+
+  setTimeout(()=>{
+    letterCard.style.top = iconRect.top + 'px';
+    letterCard.style.left = iconRect.left + 'px';
+    letterCard.style.width = iconRect.width + 'px';
+    letterCard.style.height = iconRect.height + 'px';
+    letterCard.style.borderRadius = '8px';
+    modalOverlay.classList.remove('visible');
+
+    setTimeout(()=>{
+      modalOverlay.classList.remove('show');
+    }, 460);
+  }, 150);
+}
+
+closeBtn.addEventListener('click', closeLetter);
+modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeLetter(); });
+
+restartBtn.addEventListener('click', ()=>{
+  idx = 0;
+  applyStep(STEPS[0], true);
+  buildDots(); markDot(0);
+  letterTag.querySelector('.inner').textContent = '편지를 눌러보세요 💌';
+  letterTag.style.display = '';
+  hint.textContent = '인형 몸통을 톡 눌러보세요 👆';
+  hint.style.display = 'block';
+  restartBtn.style.display = 'none';
+});
+
+/* ============================================================
+   터치 컨페티: 화면을 터치하면 작은 이모티콘이 떨어져
+   화면 아래에 소복소복 쌓여요.
+   ============================================================ */
+(function(){
+  const EMOJIS = ['💗','🌈','✨','🍀','⭐','🌸','💛','🩷'];
+  const layer = document.getElementById('confettiLayer');
+  const COL_W = 30;               // 쌓임 계산용 칸 너비(px)
+  const MAX_PILE = 150;           // 쌓임 최대 높이(px)
+  const MAX_LANDED = 120;         // 쌓인 이모티콘 최대 개수(넘으면 오래된 것부터 사라짐)
+  const GRAVITY = 0.35;
+  const BOUNCE = 0.52;            // 튕김 반발 계수 (0~1, 클수록 높이 튐)
+  const SETTLE_V = 2.4;           // 이 속도보다 느리면 튕기지 않고 착지
+
+  let stack = [];                 // 칸별 쌓인 높이
+  let falling = [];
+  let landed = [];
+  let rafId = null;
+
+  function colCount(){ return Math.ceil(window.innerWidth / COL_W); }
+  function ensureStack(){
+    const n = colCount();
+    while(stack.length < n) stack.push(0);
+  }
+  ensureStack();
+  window.addEventListener('resize', ensureStack);
+
+  function spawn(x, y){
+    ensureStack();
+    const count = 2 + Math.floor(Math.random()*2); // 한 번에 2~3개
+    for(let i=0;i<count;i++){
+      const el = document.createElement('span');
+      el.className = 'confetti';
+      el.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+      const size = 26 + Math.random()*16;   // 2배 크기 (26~42px)
+      el.style.fontSize = size + 'px';
+      layer.appendChild(el);
+      falling.push({
+        el, size,
+        x: x + (Math.random()*32 - 16),
+        y: y + (Math.random()*10 - 5),
+        vx: (Math.random()*1.8 - 0.9),
+        vy: -(Math.random()*1.5),          // 살짝 튀어오르며 시작
+        rot: Math.random()*360,
+        vr: (Math.random()*6 - 3),
+        bounces: 0,
+        canDisturb: true                   // 이 입자는 쌓인 애들을 튕겨낼 수 있음
+      });
+    }
+    if(!rafId) rafId = requestAnimationFrame(tick);
+  }
+
+  function floorFor(x, size){
+    const c = Math.max(0, Math.min(stack.length-1, Math.floor(x / COL_W)));
+    return { col:c, y: window.innerHeight - Math.min(stack[c], MAX_PILE) - size };
+  }
+
+  /* 충돌 지점 근처에 쌓여있던 이모티콘들을 함께 튕겨내기 */
+  function disturb(ix, iy){
+    let popped = 0;
+    for(let j = landed.length - 1; j >= 0 && popped < 4; j--){
+      const q = landed[j];
+      const dx = (q.x + q.size/2) - ix;
+      const dy = (q.y + q.size/2) - iy;
+      if(Math.abs(dx) < 55 && Math.abs(dy) < 60){
+        landed.splice(j, 1);
+        if(q.col != null) stack[q.col] = Math.max(0, stack[q.col] - q.contrib);
+        q.el.classList.remove('landed');
+        falling.push({
+          el: q.el, size: q.size,
+          x: q.x, y: q.y - 2,
+          // 부딪힌 방향 반대쪽으로 폴짝
+          vx: (dx === 0 ? (Math.random()*2 - 1) : Math.sign(dx)) * (0.7 + Math.random()*1.3),
+          vy: -(1.6 + Math.random()*2.4),
+          rot: Math.random()*30 - 15,
+          vr: (Math.random()*8 - 4),
+          bounces: 2,          // 금방 잦아들도록
+          canDisturb: false    // 연쇄 폭발 방지: 튕겨난 애들은 남을 못 튕김
+        });
+        popped++;
+      }
+    }
+    if(falling.length && !rafId) rafId = requestAnimationFrame(tick);
+  }
+
+  function tick(){
+    for(let i = falling.length - 1; i >= 0; i--){
+      const p = falling[i];
+      p.vy += GRAVITY;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+
+      // 좌우 벽
+      if(p.x < 0){ p.x = 0; p.vx *= -0.5; }
+      if(p.x > window.innerWidth - p.size){ p.x = window.innerWidth - p.size; p.vx *= -0.5; }
+
+      const f = floorFor(p.x + p.size/2, p.size);
+      if(p.y >= f.y && p.vy > 0){
+        // 부딪히는 순간, 근처에 쌓여있던 애들도 함께 폴짝!
+        if(p.canDisturb){
+          disturb(p.x + p.size/2, p.y + p.size);
+        }
+        if(p.vy > SETTLE_V && p.bounces < 3){
+          // ✨ 통통! 가벼운 것처럼 튕기기 (튈수록 힘이 빠짐)
+          p.y = f.y;
+          p.bounces++;
+          p.vy = -p.vy * (BOUNCE - p.bounces*0.08) * (0.85 + Math.random()*0.3);
+          p.vx = p.vx * 0.75 + (Math.random()*1.2 - 0.6);  // 옆으로 살짝 굴러감
+          p.vr = (Math.random()*10 - 5);                    // 튕길 때 팽그르르
+        } else {
+          // 착지: 그 칸에 쌓기
+          p.y = f.y;
+          p.el.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${(Math.random()*40-20)}deg)`;
+          p.el.classList.add('landed');
+          const contrib = (stack[f.col] < MAX_PILE) ? p.size * 0.55 : 0;
+          stack[f.col] += contrib;
+          landed.push({ el:p.el, x:p.x, y:p.y, size:p.size, col:f.col, contrib });
+          falling.splice(i,1);
+
+          // 너무 많이 쌓이면 오래된 것부터 스르륵 제거
+          while(landed.length > MAX_LANDED){
+            const old = landed.shift();
+            if(old.col != null) stack[old.col] = Math.max(0, stack[old.col] - old.contrib);
+            old.el.style.opacity = '0';
+            setTimeout(()=> old.el.remove(), 1000);
+          }
+          continue;
+        }
+      }
+      p.el.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg)`;
+    }
+    if(falling.length > 0){
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = null;
+    }
+  }
+
+  // 화면 어디를 터치해도 발동 (모달이 열려있을 땐 제외)
+  document.addEventListener('pointerdown', (e)=>{
+    if(modalOverlay.classList.contains('show')) return;
+    spawn(e.clientX, e.clientY);
+  });
+})();
+</script>
+</body>
+</html>
