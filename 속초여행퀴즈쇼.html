@@ -272,6 +272,16 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
 .dots i:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* 인쇄하면 조작 요소는 빼고 내용만 */
+@media print{
+  body{background:#fff;padding:0}
+  .bottom,#toast,#cropper,.netbar,header .knit,.tide-label,button{display:none!important}
+  .card,.label,.qbox{box-shadow:none;border-color:#999;break-inside:avoid;page-break-inside:avoid}
+  .card::before,.label::before,.qbox::before{display:none}
+  .board{break-inside:avoid;page-break-inside:avoid}
+  .shot{break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -391,7 +401,7 @@ const store={
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); }catch(e){} }
 };
 const blank = () => ({
-  names:{A:'',B:''}, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
+  names:{A:'',B:''}, seen:{}, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
   show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
   finale:{ opened:false, best:{}, titles:{}, orderScore:null },
@@ -403,7 +413,7 @@ function hydrate(raw){
   const b=blank();
   if(!raw||typeof raw!=='object') return b;
   const out=Object.assign(b,raw);
-  ['names','seals','warm','beers','show','finale','guesses'].forEach(k=>{
+  ['names','seen','seals','warm','beers','show','finale','guesses'].forEach(k=>{
     if(k in b) out[k]=Object.assign({},b[k],raw[k]||{});
   });
   out.beers.names  = Object.assign({}, (raw.beers&&raw.beers.names)||{});
@@ -437,13 +447,41 @@ async function call(action,payload){
   if(!j.ok) throw new Error(j.error||'서버 오류');
   return j.data;
 }
+/* 사진 원본(base64)은 기기에만 둡니다.
+   시트 한 칸은 5만 자가 한계인데 사진 한 장이 25만 자라 그대로 보내면 저장이 통째로 실패합니다. */
+const blobs={};
+function 동기화본(){
+  const c=Object.assign({},S);
+  c.photos=S.photos.map(p=>{ const q=Object.assign({},p); delete q.local; return q; });
+  c.seen=Object.assign({},S.seen,{[me]:Date.now()});
+  return c;
+}
 async function push(){
   if(!CONFIG.API_URL) return;
   if(!online||pushing){ dirty=true; return; }
   pushing=true;
-  try{ S.rev=Date.now(); await call('setState',{state:S}); dirty=false; }
-  catch(e){ dirty=true; } finally{ pushing=false; }
+  try{
+    S.rev=Date.now();
+    const body=동기화본();
+    S.seen=body.seen;
+    await call('setState',{state:body});
+    dirty=false;
+  }catch(e){ dirty=true; } finally{ pushing=false; }
 }
+
+/* 못 올린 사진 다시 시도 */
+async function retryUploads(){
+  if(!CONFIG.API_URL||!online) return;
+  const 남은것=S.photos.filter(p=>!p.url && (p.local||blobs[p.id]));
+  for(const p of 남은것){
+    try{
+      const up=await call('upload',{id:p.id, dataUrl:p.local||blobs[p.id], slot:p.slot,
+        place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(p.by)});
+      p.url=up.url; delete p.local; save(); render();
+    }catch(e){ break; }
+  }
+}
+setInterval(retryUploads, 20000);
 async function pull(){
   if(!CONFIG.API_URL||!online) return;
   try{
@@ -485,14 +523,16 @@ function shrink(file,max=1200,q=.8){
 async function addPhoto(dataUrl,meta){
   const p=Object.assign({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),
     by:me, ts:Date.now(), local:dataUrl, url:null}, meta);
+  blobs[p.id]=dataUrl;                     // 기기에만 남는 사본
   S.photos.push(p); save(); render();
-  try{ const up=await call('upload',{id:p.id,dataUrl,slot:p.slot,
-        place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(me)});
-    p.url=up.url; delete p.local; save(); }
-  catch(e){}
+  try{
+    const up=await call('upload',{id:p.id,dataUrl,slot:p.slot,
+      place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(me)});
+    p.url=up.url; delete p.local; save(); render();
+  }catch(e){ toast('아직 못 올렸습니다. 연결되면 다시 시도합니다'); }
   return p;
 }
-const src = p => p.url||p.local||'';
+const src = p => p.url || p.local || blobs[p.id] || '';
 const photosOf = (slot,opt={}) => S.photos.filter(p=>
   p.slot===slot && (!opt.mission||p.mission===opt.mission) && (!opt.by||p.by===opt.by));
 async function pick(meta,cb){
@@ -1320,6 +1360,19 @@ function vFinale(){
     <button class="primary" style="flex:0 0 70px" data-run="setTitle">저장</button></div>`;
   h+=`</div>`;
 
+  h+=`<div class="card"><div class="jua">한 권으로 남기기</div>
+    <p class="muted" style="margin-top:2px">판, 사진, 서로에게 쓴 답을 묶어 PDF 로 만듭니다.
+      드라이브에 저장되고 두 사람 메일로도 갑니다.</p>
+    ${S.finale.bookUrl
+      ? `<div class="answer" style="margin:13px 0;border-style:solid;border-color:var(--green)">
+           <b>다 만들었습니다</b><div style="word-break:break-all">
+           <a href="${esc(S.finale.bookUrl)}" target="_blank" rel="noopener">드라이브에서 열기</a></div></div>
+         <button class="wide" data-run="makeBook">다시 만들기</button>`
+      : `<button class="primary wide" style="margin-top:12px" data-run="makeBook">📕 책 만들기</button>
+         <p class="muted center" style="margin:11px 0 0;font-size:12px">사진이 많으면 1분쯤 걸립니다</p>`}
+    <button class="wide" style="margin-top:9px" onclick="window.print()">인쇄해서 저장</button>
+  </div>`;
+
   const pool=shuffle(S.photos.slice(),CONFIG.TRIP_DATE+'order').slice(0,8);
   if(pool.length>=3){
     h+=`<div class="card"><div class="jua">시간순 맞히기</div>
@@ -1336,6 +1389,16 @@ function vFinale(){
         ${pool.length}장 중 ${S.finale.orderScore}장 정확</p>`:''}</div>`;
   }
   return h;
+}
+async function makeBook(){
+  if(!CONFIG.API_URL) return toast('서버가 있어야 만들 수 있습니다. 아래 인쇄를 써주세요');
+  toast('엮는 중… 1분쯤 걸립니다');
+  try{
+    await push();                                   // 최신 기록부터 올리고
+    const out=await call('makeBook',{ warm:WARM });  // 문항 원문은 앱이 보냅니다
+    S.finale.bookUrl=out.url; save(); render();
+    toast(out.mailed? '만들었습니다. 메일로도 보냈어요' : '만들었습니다');
+  }catch(e){ toast('실패: '+e.message); }
 }
 function openFinale(){
   if(!confirm('한 번 열면 답을 고칠 수 없습니다. 둘이 같이 보고 계신가요?')) return;
@@ -1364,10 +1427,18 @@ function gradeOrder(){
 /* ── 앨범 / 나 ───────────────────────────────── */
 function screenAlbum(){
   let top='';
-  if(bothIn()) top=['A','B'].map(k=>`<div class="card">
-    <div class="jua" style="margin-bottom:11px"><span class="swatch" style="background:${myColor(k).hex}"></span>
-      ${esc(nameOf(k))}의 ${myColor(k).name} 판 · ${colorShots(k).length}/${CELLS}</div>
-    ${boardHtml(k)}</div>`).join('');
+  if(bothIn()) top=['A','B'].map(k=>{
+    const 열림 = (k===me) || S.finale.opened;
+    return `<div class="card">
+      <div class="jua" style="margin-bottom:11px">
+        <span class="swatch" style="background:${myColor(k).hex}"></span>
+        ${esc(nameOf(k))}의 ${열림?myColor(k).name+' 판':'판'} · ${colorShots(k).length}/${CELLS}칸
+        ${midShot(k)?' · 가운데 ✓':''}</div>
+      ${열림 ? boardHtml(k)
+             : `<div class="board">${Array.from({length:9},(_,i)=>
+                 `<div class="cell">${i===4?'🔒':(colorShots(k).length>(i<4?i:i-1)?'●':'')}</div>`).join('')}</div>
+                <p class="muted center" style="margin:11px 0 0">귀가길에 함께 열립니다</p>`}
+    </div>`;}).join('');
   if(!S.photos.length) return top+`<div class="card center"><p class="muted" style="margin:0">
     아직 한 장도 없습니다.</p></div>`;
   return top+albumRest();
@@ -1394,9 +1465,30 @@ function screenMe(){
       내가 낸 문제 ${S.customQ.filter(q=>q.by===me).length}개</p>
     <p class="muted">함께: ${esc(nameOf(other()))||'아직 없음'}</p>
     <p class="muted">${CONFIG.API_URL?(online?'연결됨':'오프라인 — 임시 저장 중'):'서버 없음 — 이 기기에만'}
-      ${isDummy()?' · 더미 모드 (여행 당일 자동 해제)':''}</p>
+      ${isDummy()?' · 테스트 문항 모드':''}</p>
+    <div class="stack" style="margin-top:13px">
+      <div class="answer"><b>${esc(nameOf(other()))} 접속</b>
+        <div>${S.seen&&S.seen[other()] ? 지난시간(S.seen[other()])+' 전' : '아직 기록 없음'}</div></div>
+      <div class="answer"><b>상대가 모은 것</b>
+        <div>사진 ${S.photos.filter(p=>p.by===other()).length}장 ·
+             색 ${colorShots(other()).length}/${CELLS}칸 ·
+             문제 ${S.customQ.filter(q=>q.by===other()).length}개</div></div>
+      <div class="answer"><b>사진 올리기</b>
+        <div>${S.photos.filter(p=>!p.url).length? S.photos.filter(p=>!p.url).length+'장 대기 중':'전부 올렸습니다'}</div></div>
+    </div>
+    <button class="wide" style="margin-top:11px" data-run="지금동기화">지금 맞춰보기</button>
     <button class="wide" style="margin-top:8px" data-run="leave">나가기</button>
     <button class="wide" style="margin-top:9px" data-run="wipe">전부 지우기</button></div>`;
+}
+function 지난시간(ts){
+  const s=Math.max(0,Math.round((Date.now()-ts)/1000));
+  return s<60? s+'초' : s<3600? Math.round(s/60)+'분' : Math.round(s/3600)+'시간';
+}
+async function 지금동기화(){
+  if(!CONFIG.API_URL) return toast('서버가 설정되지 않았습니다');
+  toast('맞춰보는 중…');
+  await push(); await retryUploads(); await pull(); render();
+  toast('맞췄습니다');
 }
 function leave(){ S.names[me]=''; me=null; store.set('me',''); skipWait=false; save(); render(); }
 function wipe(){ if(confirm('사진과 점수까지 전부 지웁니다. 계속할까요?')){ S=blank(); me=null; store.set('me',''); save(); render(); } }
