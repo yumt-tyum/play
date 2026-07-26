@@ -169,6 +169,11 @@ label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .answer{background:#FFFDF6;border-radius:11px;padding:10px 13px;
   border:2px dashed var(--stitch)}
 .answer b{font-family:'Jua';font-size:12px;color:var(--red)}
+.answer.ok{border-style:solid;border-color:var(--green);background:#F4FAEE}
+.answer.no{border-style:solid;border-color:var(--stitch);opacity:.72}
+.answer .mk{float:right;font-family:'Jua';font-size:13px}
+.answer.ok .mk{color:var(--green)}
+.answer.no .mk{color:var(--muted)}
 
 /* ── 사진: 대지에 붙인 인화지 ───────────────── */
 .shots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -302,7 +307,7 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
   <div class="live" id="live"></div>
   <nav>
     <button onclick="go('home')">일정</button>
-    <button onclick="go('album')">판·앨범</button>
+    <button onclick="go('album')">앨범</button>
     <button onclick="go('me')">나</button>
   </nav>
 </div></div>
@@ -401,7 +406,7 @@ const store={
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); }catch(e){} }
 };
 const blank = () => ({
-  names:{A:'',B:''}, seen:{}, colors:{A:null,B:null}, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
+  names:{A:'',B:''}, seen:{}, colors:{A:null,B:null}, colorsV:2, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
   show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
   finale:{ opened:false, best:{}, titles:{}, orderScore:null },
@@ -422,6 +427,7 @@ function hydrate(raw){
   if(typeof out.show.i!=='number') out.show.i=0;
   ['best','titles'].forEach(k=>{ if(!out.finale[k]) out.finale[k]={}; });
   ['photos','customQ','aiQ'].forEach(k=>{ if(!Array.isArray(out[k])) out[k]=[]; });
+  if(out.colorsV!==2){ out.colors={A:null,B:null}; out.colorsV=2; }   // 색 새로 뽑기
   return out;
 }
 
@@ -535,14 +541,18 @@ async function addPhoto(dataUrl,meta){
 const src = p => p.url || p.local || blobs[p.id] || '';
 const photosOf = (slot,opt={}) => S.photos.filter(p=>
   p.slot===slot && (!opt.mission||p.mission===opt.mission) && (!opt.by||p.by===opt.by));
-async function pick(meta,cb){
+async function pick(meta,cb,opt){
+  opt=opt||{};
   const i=document.createElement('input');
   i.type='file'; i.accept='image/*'; i.capture='environment';
   i.onchange=async()=>{
     if(!i.files[0]) return;
     toast('줄이는 중…');
-    try{ const d=await shrink(i.files[0]); const p=await addPhoto(d,meta); toast('붙였습니다'); cb&&cb(p); }
-    catch(e){ toast(e.message); }
+    try{
+      // 글자를 읽어야 하는 사진은 크게 남깁니다. 1568px 이 API 가 그대로 쓰는 한계예요.
+      const d=await shrink(i.files[0], opt.max||1200, opt.q||0.8);
+      const p=await addPhoto(d,meta); toast('붙였습니다'); cb&&cb(p);
+    }catch(e){ toast(e.message); }
   };
   i.click();
 }
@@ -699,6 +709,10 @@ function myColor(k){
 const colorOr = k => myColor(k) || NOCOLOR;
 
 /* 상대가 가진 색은 빼고 뽑습니다 */
+function redrawColor(){
+  if(colorShots(me).length) return toast('이미 사진을 붙여서 못 바꿉니다');
+  S.colors[me]=null; drawColor();
+}
 function drawColor(){
   if(myColor(me)) return;
   const 상대=S.colors && S.colors[other()];
@@ -946,7 +960,10 @@ function vCapture(s){
   </div>`;
   return h;
 }
-function capShot(slot){ pick({slot}); }
+function capShot(slot){
+  const 글자읽기 = slot==='balhae';
+  pick({slot}, null, 글자읽기? {max:1568, q:0.92} : {});
+}
 function addQ(slot){
   const q=document.getElementById('cq').value.trim(), a=document.getElementById('ca').value.trim();
   if(!q||!a) return toast('문제와 정답 둘 다 필요합니다');
@@ -958,6 +975,8 @@ function vAI(s){
   const panels=photosOf(s.id);
   return `<div class="card">
     <p class="muted" style="margin-top:0">설명 패널을 찍으면 그 내용으로 문제가 만들어집니다. 둘 다 처음 봅니다.</p>
+    <p class="muted" style="margin-top:0">패널 전체를 멀리서 담지 말고, <b>설명 문단 하나를 가까이서</b> 찍어주세요.
+      화면에서 글자가 읽히면 됩니다.</p>
     <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 패널 찍기</button>
     <div class="shots" style="margin-top:15px">
       ${panels.map(p=>`<div class="shot"><img src="${src(p)}" alt=""><span class="who">${esc(nameOf(p.by))}</span></div>`).join('')
@@ -1054,18 +1073,29 @@ function numOf(v){
   const m=t.match(/-?\d+(\.\d+)?/);
   return m? Number(m[0]) : null;
 }
+/* 사람별로 맞았는지 { A:true, B:false } */
+function hitMap(truth, ans, need){
+  const t=numOf(truth), ns=need.map(k=>numOf(ans[k])), out={};
+  if(t!=null && ns.every(n=>n!=null)){            // 숫자 → 가장 가까운 쪽
+    const gap=ns.map(n=>Math.abs(n-t)), best=Math.min(...gap);
+    need.forEach((k,i)=>out[k]= gap[i]===best);
+  }else{
+    need.forEach(k=>out[k]= similar(ans[k],truth));
+  }
+  return out;
+}
 /* 'A' | 'B' | 'both' | 'none' */
 function autoGrade(truth, ans, need){
-  const t=numOf(truth), ns=need.map(k=>numOf(ans[k]));
-  if(t!=null && ns.every(n=>n!=null)){                    // 숫자 → 근접 판정
-    const gap=ns.map(n=>Math.abs(n-t)), best=Math.min(...gap);
-    const win=need.filter((k,i)=>gap[i]===best);
-    return win.length===need.length && need.length>1 ? 'both' : win[0];
-  }
-  const hit=need.filter(k=>similar(ans[k],truth));
+  const h=hitMap(truth,ans,need), hit=need.filter(k=>h[k]);
   if(!hit.length) return 'none';
   if(hit.length===need.length && need.length>1) return 'both';
   return hit[0];
+}
+/* 답 한 줄 */
+function 답줄(라벨, 값, 맞음){
+  return `<div class="answer ${맞음===true?'ok':맞음===false?'no':''}">
+    <b>${esc(라벨)}</b>${맞음!=null?`<span class="mk">${맞음?'정답':'아쉽'}</span>`:''}
+    <div>${esc(값??'—')}</div></div>`;
 }
 
 /* ── 퀴즈: 한 문제씩 ─────────────────────────── */
@@ -1117,6 +1147,8 @@ function vShow(){
 
   if(q.kind==='beer'){
     const n=S.beers.names, v=S.beers.verdict;
+    // 심사 결과가 있는데 점수가 안 매겨졌으면(동기화로 넘어온 경우 등) 여기서 매깁니다
+    if(v && !S.show.graded.beer) setTimeout(()=>grade('beer', v.order[v.winner]),0);
     h+=`<div class="qbox"><div class="qt">어느 쪽이 더 그럴듯한 맥주 이름일까</div>
       <div class="stack">
         <div class="answer"><b>1번</b><div>${esc(n.A)}</div></div>
@@ -1132,15 +1164,19 @@ function vShow(){
     const rec=S.seals[q.id.slice(3)]||{};
     h+=`<div class="qbox"><div class="qt">${esc(q.text)}</div>
       ${q.tip?`<p class="muted" style="margin:-8px 0 13px">${esc(q.tip)}</p>`:''}
-      <div class="stack">
-        <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
-        <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div></div>
+      ${S.show.truth[q.id]?'':`<div class="stack">
+        ${답줄(nameOf('A'),rec.A)}${답줄(nameOf('B'),rec.B)}</div>`}
       <label>실제로는?</label>
       <div class="row"><input id="tr" value="${esc(S.show.truth[q.id]??'')}" placeholder="결과 입력">
       <button style="flex:0 0 70px" data-run="setTruth" data-a="${q.id}">확인</button></div>`;
-    if(S.show.truth[q.id]) h+=`<div class="answer" style="margin-top:13px;border-style:solid;border-color:var(--green)">
-      <b>정답</b><div>${esc(S.show.truth[q.id])}</div></div>`
-      +gradeRow(q, S.show.truth[q.id], {A:rec.A,B:rec.B}, ['A','B']);
+    if(S.show.truth[q.id]){
+      const 진짜=S.show.truth[q.id], hm=hitMap(진짜,{A:rec.A,B:rec.B},['A','B']);
+      h+=`<div class="answer" style="margin-top:13px;border-style:solid;border-color:var(--green)">
+            <b>실제</b><div>${esc(진짜)}</div></div>
+          <div class="stack" style="margin-top:10px">
+            ${답줄(nameOf('A'),rec.A,hm.A)}${답줄(nameOf('B'),rec.B,hm.B)}</div>`
+       +gradeRow(q, 진짜, {A:rec.A,B:rec.B}, ['A','B']);
+    }
     return h+`</div>`+(graded?nextBtn():'');
   }
 
@@ -1166,42 +1202,56 @@ function vShow(){
     h+=`<p class="muted center" style="margin-bottom:0">
       ${need.includes(me)&&a[me]==null?'답을 넣어주세요':nameOf(wait[0])+' 기다리는 중'}</p>`;
   }else{
-    if(q.kind!=='choice') h+=`<div class="stack" style="margin-top:13px">
-      ${need.map(k=>`<div class="answer"><b>${esc(nameOf(k))}</b><div>${esc(a[k])}</div></div>`).join('')}
-      <div class="answer" style="border-style:solid;border-color:var(--green)"><b>정답</b><div>${esc(q.truth)}</div></div>
-    </div>`;
+    if(q.kind!=='choice'){
+      const hm=hitMap(q.truth,a,need);
+      h+=`<div class="stack" style="margin-top:13px">
+        <div class="answer" style="border-style:solid;border-color:var(--green)">
+          <b>정답</b><div>${esc(q.truth)}</div></div>
+        ${need.map(k=>답줄(nameOf(k),a[k],hm[k])).join('')}
+      </div>`;
+    }
     h+=gradeRow(q);
   }
   return h+`</div>`+(graded?nextBtn():'');
 }
 function gradeRow(q, truth, ans, need){
   const g=S.show.graded[q.id];
-  if(g) return `<p class="center jua" style="font-size:17px;margin:15px 0 0">
-    ${g==='none'?'둘 다 못 맞혔습니다':g==='both'?'둘 다 정답 🎉':esc(nameOf(g))+' 정답 +1'}</p>`;
 
-  if(q.kind==='choice'){
-    const a=ansOf(q.id);
-    const auto = a.A===q.truth&&a.B===q.truth?'both' : a.A===q.truth?'A' : a.B===q.truth?'B' : 'none';
-    setTimeout(()=>grade(q.id,auto),0);
+  /* 아직 안 매겼으면 바로 매깁니다. 누가 맞았는지 고르는 단계는 없습니다. */
+  if(!g){
+    if(q.kind==='choice'){
+      const a=ansOf(q.id);
+      const auto = a.A===q.truth&&a.B===q.truth?'both' : a.A===q.truth?'A' : a.B===q.truth?'B' : 'none';
+      setTimeout(()=>grade(q.id,auto),0);
+    }else{
+      const t = truth!==undefined? truth : q.truth;
+      setTimeout(()=>grade(q.id, autoGrade(t, ans||ansOf(q.id), need||askers(q))),0);
+    }
     return '';
   }
 
-  truth = truth!==undefined? truth : q.truth;
-  ans   = ans   || ansOf(q.id);
-  need  = need  || askers(q);
-  const sug = autoGrade(truth, ans, need);
-  const 숫자 = numOf(truth)!=null && need.every(k=>numOf(ans[k])!=null);
-  const 안내 = 숫자 ? '숫자가 가장 가까운 쪽으로 봤습니다'
-                    : '띄어쓰기나 사소한 차이는 정답으로 봤습니다';
+  /* 결과 */
+  const 문구 = g==='none' ? '둘 다 아쉽습니다'
+             : g==='both' ? '둘 다 정답 🎉  +1'
+             : esc(nameOf(g))+' 정답  +1';
+  let h=`<p class="center jua" style="font-size:19px;margin:16px 0 0">${문구}</p>`;
 
-  const b=(k,label,cls)=>`<button class="${sug===k?(cls||'primary'):''}"
-    data-run="grade" data-a="${q.id}" data-b="${k}">${sug===k?'✓ ':''}${label}</button>`;
-
-  return `<p class="muted center" style="margin:15px 0 3px">${안내}</p>
-    <p class="muted center" style="margin:0 0 8px;font-size:12px">아니면 눌러서 바꿔주세요</p>
-    <div class="row">${b('A',esc(nameOf('A')))}${b('B',esc(nameOf('B')))}</div>
-    <div class="row" style="margin-top:9px">${b('both','둘 다','green')}${b('none','아무도','')}</div>`;
+  /* 판정이 마음에 안 들 때만 펼칩니다 */
+  if(q.kind!=='choice'){
+    h+= peek.fix===q.id
+      ? `<p class="muted center" style="margin:12px 0 7px;font-size:12.5px">판정을 바꿉니다</p>
+         <div class="row">
+           <button data-run="grade" data-a="${q.id}" data-b="A">${esc(nameOf('A'))}</button>
+           <button data-run="grade" data-a="${q.id}" data-b="B">${esc(nameOf('B'))}</button></div>
+         <div class="row" style="margin-top:9px">
+           <button data-run="grade" data-a="${q.id}" data-b="both">둘 다</button>
+           <button data-run="grade" data-a="${q.id}" data-b="none">아무도</button></div>`
+      : `<p class="center" style="margin:11px 0 0">
+           <button style="font-size:12px;padding:7px 13px" data-run="fixGrade" data-a="${q.id}">✎ 판정 고치기</button></p>`;
+  }
+  return h;
 }
+function fixGrade(qid){ peek.fix=qid; render(); }
 const nextBtn = () => `<button class="denim wide" data-run="nextQ">다음 문제 →</button>`;
 function answer(qid,choice){
   const v = choice!=null ? Number(choice) : document.getElementById('ai_'+qid).value.trim();
@@ -1209,11 +1259,16 @@ function answer(qid,choice){
   S.show.ans[qid]=S.show.ans[qid]||{}; S.show.ans[qid][me]=v; save(); render();
 }
 function grade(qid,who){
-  if(S.show.graded[qid]) return;
+  const 이전=S.show.graded[qid];
+  if(이전===who) return;
+  if(이전){                                   // 고칠 때는 먼저 되돌립니다
+    if(이전==='both'){ S.show.scores.A--; S.show.scores.B--; }
+    else if(이전==='A'||이전==='B') S.show.scores[이전]--;
+  }
   S.show.graded[qid]=who;
   if(who==='both'){ S.show.scores.A++; S.show.scores.B++; }
   else if(who==='A'||who==='B') S.show.scores[who]++;
-  save(); render();
+  peek.fix=null; save(); render();
 }
 function setTruth(qid){
   const v=document.getElementById('tr').value.trim();
@@ -1221,7 +1276,7 @@ function setTruth(qid){
   S.show.truth[qid]=v; save(); render();
 }
 function forceShow(){ if(confirm('아직 안 채운 게 있습니다. 그래도 시작할까요?')){ peek.force=true; render(); } }
-function nextQ(){ S.show.i++; save(); render(); }
+function nextQ(){ peek.fix=null; S.show.i++; save(); render(); }
 function prevQ(){ if(S.show.i>0){ S.show.i--; save(); render(); } }
 function vShowEnd(Q){
   const sc=S.show.scores;
@@ -1277,6 +1332,8 @@ function vColor(){
       ${left>0? left+'칸 남았습니다' : '여덟 칸 다 찼습니다 ✓'}</p>
     <button class="primary wide" ${left>0?'':'disabled'} data-run="shotColor">
       📷 ${col.name} 찾아 찍기</button>
+    ${cs.length===0?`<button class="wide" style="margin-top:9px" data-run="redrawColor">
+      🎲 다른 색으로 다시 뽑기</button>`:''}
     ${cs.length? `<button class="wide" style="margin-top:9px" data-run="undoColor">방금 것 빼기</button>`:''}
   </div>
   <div class="card"><div class="jua">가운데 한 칸</div>
@@ -1455,29 +1512,15 @@ function gradeOrder(){
 
 /* ── 앨범 / 나 ───────────────────────────────── */
 function screenAlbum(){
-  let top='';
-  if(bothIn()) top=['A','B'].map(k=>{
-    const 열림 = (k===me) || S.finale.opened;
-    return `<div class="card">
-      <div class="jua" style="margin-bottom:11px">
-        <span class="swatch" style="background:${colorOr(k).hex}"></span>
-        ${esc(nameOf(k))}의 ${열림&&myColor(k)?colorOr(k).name+' 판':'판'} · ${colorShots(k).length}/${CELLS}칸
-        ${midShot(k)?' · 가운데 ✓':''}</div>
-      ${열림 ? boardHtml(k)
-             : `<div class="board">${Array.from({length:9},(_,i)=>
-                 `<div class="cell">${i===4?'🔒':(colorShots(k).length>(i<4?i:i-1)?'●':'')}</div>`).join('')}</div>
-                <p class="muted center" style="margin:11px 0 0">귀가길에 함께 열립니다</p>`}
-    </div>`;}).join('');
-  if(!S.photos.length) return top+`<div class="card center"><p class="muted" style="margin:0">
-    아직 한 장도 없습니다.</p></div>`;
-  return top+albumRest();
-}
-function albumRest(){
-  if(!S.photos.length) return `<div class="card center"><p class="muted" style="margin:0">
-    아직 한 장도 없습니다.</p></div>`;
-  let h='';
+  /* 판은 여기 없습니다. 귀가길에 둘이 같이 열어봐요. */
+  const 볼수있는 = p => S.finale.opened || p.by===me || (p.mission!=='color' && p.mission!=='mid');
+  let h='', 가린수=0;
+
   TRIP.forEach(s=>{
-    const ps=photosOf(s.id); if(!ps.length) return;
+    const 전부=photosOf(s.id);
+    const ps=전부.filter(볼수있는);
+    가린수 += 전부.length-ps.length;
+    if(!ps.length) return;
     h+=`<div class="card"><span class="tag sand">${s.day}일차 ${s.time}</span>
       <div class="jua" style="margin:8px 0 13px">${s.mark} ${esc(s.place)}</div>
       <div class="shots">${ps.map(p=>{
@@ -1485,6 +1528,10 @@ function albumRest(){
         return `<div class="shot"><img src="${src(p)}" alt="">
           <span class="who">${t?esc(t):esc(nameOf(p.by))}</span></div>`;}).join('')}</div></div>`;
   });
+
+  if(!h) h=`<div class="card center"><p class="muted" style="margin:0">아직 한 장도 없습니다.</p></div>`;
+  if(가린수) h+=`<div class="card tight center"><p class="muted" style="margin:0">
+    🔒 ${esc(nameOf(other()))}가 모은 ${가린수}장은 귀가길에 판과 함께 열립니다</p></div>`;
   return h;
 }
 function screenMe(){
