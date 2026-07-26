@@ -182,7 +182,8 @@ label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
   box-shadow:0 3px 0 rgba(74,59,50,.14), 0 8px 16px rgba(74,59,50,.12)}
 .shot:nth-child(odd){transform:rotate(-1.3deg)}
 .shot:nth-child(even){transform:rotate(1.1deg)}
-.shot img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px}
+.shot img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px;
+  background:var(--paper-2) repeating-linear-gradient(45deg,rgba(201,169,138,.22) 0 8px,transparent 8px 16px)}
 .shot .who{position:absolute;left:0;right:0;bottom:5px;text-align:center;
   font-size:11.5px;font-family:'Jua';color:var(--muted)}
 .shot.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);
@@ -199,7 +200,8 @@ label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .cell{aspect-ratio:1;border-radius:4px;overflow:hidden;background:var(--paper-2);
   border:2px dashed var(--stitch);display:flex;align-items:center;justify-content:center;
   font-size:11px;color:var(--muted);position:relative}
-.cell img{width:100%;height:100%;object-fit:cover;display:block}
+.cell img{width:100%;height:100%;object-fit:cover;display:block;
+  background:var(--paper-2) repeating-linear-gradient(45deg,rgba(201,169,138,.22) 0 8px,transparent 8px 16px)}
 .cell.mid{border:3px solid var(--red)}
 .cell .pct{position:absolute;right:3px;bottom:3px;background:rgba(255,253,246,.92);
   border-radius:99px;padding:0 6px;font-size:10px;font-family:'Jua'}
@@ -347,8 +349,9 @@ const TRIP = [
   { id:'checkin', day:1, time:'10:30', place:'소노캄 체크인', type:'capture', noPhoto:true,
     desc:'방 둘러보고 문제 하나', mark:'🔑',
     hint:'커튼 색, 슬리퍼 개수, 창밖에 보이는 것 — 상대가 놓쳤을 만한 걸로' },
-  { id:'balhae',  day:1, time:'16:00', place:'발해역사관',    type:'ai',
-    desc:'패널 찍으면 문제가 나옵니다', mark:'🏛' },
+  // 박물관에 안 가게 되면 책이나 안내문을 찍어도 됩니다. 이름만 바꾸시면 돼요.
+  { id:'balhae',  day:1, time:'16:00', place:'읽을거리',   type:'ai',
+    desc:'글 찍으면 문제가 나옵니다', mark:'📖' },
   { id:'brew',    day:1, time:'18:00', place:'크래프트루트',  type:'brew',
     desc:'신메뉴 이름 짓기', mark:'🍺' },
   { id:'show',    day:1, time:'19:30', place:'숙소 퀴즈',     type:'show',
@@ -401,12 +404,15 @@ const SEALS = [
    2. 저장소
    ═══════════════════════════════════════════════ */
 const mem={};
+let 저장실패=false;
 const store={
   get(k){ try{ const v=localStorage.getItem(k); return v??mem[k]??null; }catch(e){ return mem[k]??null; } },
-  set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); }catch(e){} }
+  set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
+  del(k){ delete mem[k]; try{ localStorage.removeItem(k); }catch(e){} },
+  keys(){ const out=[]; try{ for(let i=0;i<localStorage.length;i++) out.push(localStorage.key(i)); }catch(e){} return out; }
 };
 const blank = () => ({
-  names:{A:'',B:''}, seen:{}, colors:{A:null,B:null}, colorsV:2, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
+  names:{A:'',B:''}, seen:{}, colors:{A:null,B:null}, colorsV:2, seals:{}, aiUsed:[], warm:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
   show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
   finale:{ opened:false, best:{}, titles:{}, orderScore:null },
@@ -426,14 +432,34 @@ function hydrate(raw){
   ['ans','truth','graded'].forEach(k=>{ if(!out.show[k]||typeof out.show[k]!=='object') out.show[k]={}; });
   if(typeof out.show.i!=='number') out.show.i=0;
   ['best','titles'].forEach(k=>{ if(!out.finale[k]) out.finale[k]={}; });
-  ['photos','customQ','aiQ'].forEach(k=>{ if(!Array.isArray(out[k])) out[k]=[]; });
+  ['photos','customQ','aiQ','aiUsed'].forEach(k=>{ if(!Array.isArray(out[k])) out[k]=[]; });
   if(out.colorsV!==2){ out.colors={A:null,B:null}; out.colorsV=2; }   // 색 새로 뽑기
   return out;
 }
 
 let S=blank(), me=store.get('me')||null, skipWait=false;
 try{ const raw=store.get('state'); if(raw) S=hydrate(JSON.parse(raw)); }catch(e){}
-function save(){ store.set('state',JSON.stringify(S)); push(); }
+/* 글 기록이 사진보다 먼저입니다.
+   자리가 모자라면 사진 사본을 비워서라도 답과 점수는 지킵니다.
+   비워진 사진도 서버에 올라간 것은 그대로 남아 있어요. */
+function 기기저장(){
+  const c=Object.assign({},S);
+  c.photos=S.photos.map(p=>{ const q=Object.assign({},p); delete q.local; return q; });
+  const json=JSON.stringify(c);
+  if(store.set('state', json)) return true;
+
+  const 순서=Object.keys(blobs).sort((a,b)=>{
+    const pa=S.photos.find(p=>p.id===a), pb=S.photos.find(p=>p.id===b);
+    if(!!(pa&&pa.url) !== !!(pb&&pb.url)) return (pa&&pa.url)?-1:1;   // 이미 올라간 것부터
+    return ((pa&&pa.ts)||0)-((pb&&pb.ts)||0);                          // 그다음 오래된 것부터
+  });
+  for(const id of 순서){
+    사진버리기(id); 저장실패=true;
+    if(store.set('state', json)) return true;
+  }
+  저장실패=true; return false;
+}
+function save(){ 기기저장(); push(); }
 
 /* ═══════════════════════════════════════════════
    3. 통신
@@ -454,8 +480,19 @@ async function call(action,payload){
   return j.data;
 }
 /* 사진 원본(base64)은 기기에만 둡니다.
-   시트 한 칸은 5만 자가 한계인데 사진 한 장이 25만 자라 그대로 보내면 저장이 통째로 실패합니다. */
+   시트 한 칸은 5만 자가 한계인데 사진 한 장이 25만 자라 그대로 보내면 저장이 통째로 실패합니다.
+   기기에 저장할 때도 글 기록과 따로 둡니다. 사진 때문에 답과 점수가 날아가면 안 되니까요. */
 const blobs={};
+/* 아직 못 올린 내 사진만 기기에 남깁니다.
+   상대에게서 받아온 사진은 메모리에만 두어 저장 공간을 안 잡아먹게 합니다. */
+function 사진보관(id,dataUrl,기기에도){
+  blobs[id]=dataUrl;
+  if(기기에도 && !store.set('b:'+id, dataUrl)) 저장실패=true;
+}
+function 사진버리기(id){ delete blobs[id]; store.del('b:'+id); }
+function 사진불러오기(){
+  store.keys().forEach(k=>{ if(k && k.indexOf('b:')===0) blobs[k.slice(2)]=store.get(k); });
+}
 function 동기화본(){
   const c=Object.assign({},S);
   c.photos=S.photos.map(p=>{ const q=Object.assign({},p); delete q.local; return q; });
@@ -483,7 +520,8 @@ async function retryUploads(){
     try{
       const up=await call('upload',{id:p.id, dataUrl:p.local||blobs[p.id], slot:p.slot,
         place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(p.by)});
-      p.url=up.url; delete p.local; save(); render();
+      p.fileId=up.fileId; p.url=null; delete p.local;
+      store.del('b:'+p.id); save(); render();
     }catch(e){ break; }
   }
 }
@@ -494,7 +532,7 @@ async function pull(){
     const r=await call('getState',{});
     if(r && r.rev>(S.rev||0)){
       S=hydrate(r);
-      store.set('state',JSON.stringify(S));
+      기기저장();
       render();
     }
   }catch(e){}
@@ -529,16 +567,43 @@ function shrink(file,max=1200,q=.8){
 async function addPhoto(dataUrl,meta){
   const p=Object.assign({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),
     by:me, ts:Date.now(), local:dataUrl, url:null}, meta);
-  blobs[p.id]=dataUrl;                     // 기기에만 남는 사본
+  사진보관(p.id, dataUrl, true);            // 올라갈 때까지 기기에 보관
   S.photos.push(p); save(); render();
   try{
     const up=await call('upload',{id:p.id,dataUrl,slot:p.slot,
       place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(me)});
-    p.url=up.url; delete p.local; save(); render();
+    p.fileId=up.fileId; p.url=null; delete p.local;
+    store.del('b:'+p.id);                    // 기기 사본은 정리, 메모리엔 유지
+    save(); render();
   }catch(e){ toast('아직 못 올렸습니다. 연결되면 다시 시도합니다'); }
   return p;
 }
-const src = p => p.url || p.local || blobs[p.id] || '';
+const 빈칸='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const 드라이브id = u => { const m=String(u||'').match(/[-\w]{25,}/); return m? m[0] : null; };
+const 받는중={};
+let 다시그리기=null;
+
+/* 사진은 공개 링크가 아니라 우리 스크립트를 거쳐 받아옵니다.
+   학교·회사 계정처럼 외부 공유가 막힌 곳에서도 둘 다 볼 수 있어요. */
+function 사진받기(p){
+  if(!CONFIG.API_URL || blobs[p.id] || p.local || 받는중[p.id]) return;
+  const fid = p.fileId || 드라이브id(p.url);
+  if(!fid) return;
+  받는중[p.id]=true;
+  call('getPhoto',{fileId:fid})
+    .then(r=>{
+      사진보관(p.id, r.dataUrl, false);
+      clearTimeout(다시그리기); 다시그리기=setTimeout(render,120);   // 여러 장을 한 번에
+    })
+    .catch(()=>{})
+    .then(()=>{ delete 받는중[p.id]; });
+}
+function src(p){
+  if(p.local) return p.local;
+  if(blobs[p.id]) return blobs[p.id];
+  사진받기(p);
+  return 빈칸;
+}
 const photosOf = (slot,opt={}) => S.photos.filter(p=>
   p.slot===slot && (!opt.mission||p.mission===opt.mission) && (!opt.by||p.by===opt.by));
 async function pick(meta,cb,opt){
@@ -747,9 +812,9 @@ function readiness(){
   return [
     { t:'아침 봉인',         each:k=>SEALS.every(x=>S.seals[x.id]&&S.seals[x.id][k]!=null) },
     { t:'소노캄 문제',       each:k=>made('checkin',k) },
-    { t:'발해 문제',         each:k=>made('balhae',k)  },
+    { t:'읽을거리 문제',     each:k=>made('balhae',k)  },
     { t:'맥주 이름',         each:k=>!!S.beers.names[k] },
-    { t:'발해 문항 만들기',  both:()=>S.aiQ.length>0    }
+    { t:'글에서 문항 만들기', both:()=>S.aiQ.length>0    }
   ].map(r=>Object.assign(r,{
     ok:   r.both? r.both() : (r.each('A')&&r.each('B')),
     미비: r.both? [] : ['A','B'].filter(k=>!r.each(k))
@@ -970,22 +1035,27 @@ function addQ(slot){
   S.customQ.push({id:'c'+Date.now(),slot,by:me,q,a}); save(); render(); toast('문제 추가');
 }
 
-/* ── 발해역사관 ──────────────────────────────── */
+/* ── 읽을거리에서 문항 만들기 ────────────────── */
 function vAI(s){
   const panels=photosOf(s.id);
+  const 새사진=panels.filter(p=>!(S.aiUsed||[]).includes(p.id));
   return `<div class="card">
-    <p class="muted" style="margin-top:0">설명 패널을 찍으면 그 내용으로 문제가 만들어집니다. 둘 다 처음 봅니다.</p>
-    <p class="muted" style="margin-top:0">패널 전체를 멀리서 담지 말고, <b>설명 문단 하나를 가까이서</b> 찍어주세요.
-      화면에서 글자가 읽히면 됩니다.</p>
-    <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 패널 찍기</button>
+    <p class="muted" style="margin-top:0">글이 적힌 걸 찍으면 그 내용으로 문제가 만들어집니다.
+      박물관 패널, 안내문, 책 한 페이지 — 무엇이든 됩니다. 둘 다 처음 보는 문제예요.</p>
+    <p class="muted" style="margin-top:0">멀리서 전체를 담지 말고 <b>문단 하나를 가까이서</b> 찍어주세요.
+      폰 화면에서 글자가 읽히면 됩니다.</p>
+    <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 글 찍기</button>
     <div class="shots" style="margin-top:15px">
       ${panels.map(p=>`<div class="shot"><img src="${src(p)}" alt=""><span class="who">${esc(nameOf(p.by))}</span></div>`).join('')
-        || `<div class="shot empty">패널 사진 없음</div><div class="shot empty">＋</div>`}
+        || `<div class="shot empty">아직 없음</div><div class="shot empty">＋</div>`}
     </div>
-    <button class="green wide" style="margin-top:15px" ${panels.length?'':'disabled'} data-run="genQuiz">
-      ✂️ 문제 만들기 ${isDummy()?'(더미)':''}</button>
+    <button class="green wide" style="margin-top:15px" ${새사진.length?'':'disabled'} data-run="genQuiz">
+      ✂️ ${S.aiQ.length? '새 사진으로 문제 더 만들기':'문제 만들기'} ${isDummy()?'(더미)':''}</button>
     <p class="muted center" style="margin-bottom:0">
-      ${S.aiQ.length? S.aiQ.length+'문제 준비됨 — 내용은 밤에':'아직 없음'}</p></div>
+      ${S.aiQ.length? S.aiQ.length+'문제 쌓였습니다 — 내용은 밤에':'아직 없음'}${
+        새사진.length? ' · 새 사진 '+새사진.length+'장' : ' · 새 사진 없음'}</p>
+    <p class="muted center" style="margin:6px 0 0;font-size:12px">
+      눌러도 이미 만든 문제는 안 지워집니다. 둘이 각자 찍어서 더하면 돼요.</p></div>
   <div class="card"><div class="jua">각자 몰래 3문제</div>
     <input id="cq" placeholder="문제" style="margin-top:10px">
     <input id="ca" placeholder="정답" style="margin-top:9px">
@@ -993,20 +1063,39 @@ function vAI(s){
     <p class="muted center" style="margin-bottom:0">내가 낸 문제 ${S.customQ.filter(q=>q.slot===s.id&&q.by===me).length} / 3</p></div>`;
 }
 async function genQuiz(){
-  const panels=photosOf('balhae');
-  if(!panels.length) return toast('패널 사진이 먼저입니다');
+  const 전체=photosOf('balhae');
+  if(!전체.length) return toast('글 사진이 먼저입니다');
+
+  // 아직 문제로 안 만든 사진만 씁니다. 눌러도 기존 문제는 그대로 남아요.
+  const 새사진=전체.filter(p=>!(S.aiUsed||[]).includes(p.id));
+  if(!새사진.length) return toast('새로 올린 사진이 없습니다');
+
   if(isDummy()){
-    S.aiQ=shuffle(DUMMY_Q,CONFIG.TRIP_DATE).slice(0,3); save(); render();
-    return toast('더미 문항 3개 (개발용)');
+    const 새것=shuffle(DUMMY_Q,CONFIG.TRIP_DATE+새사진[0].id).slice(0,3);
+    S.aiQ=S.aiQ.concat(새것.filter(q=>!S.aiQ.some(x=>x.q===q.q)));
+    S.aiUsed=(S.aiUsed||[]).concat(새사진.map(p=>p.id));
+    save(); render(); return toast('더미 문항을 더했습니다');
   }
+
   toast('만드는 중… 20초쯤');
   try{
-    await retryUploads();                       // 아직 못 올린 사진이 있으면 먼저 올리고
-    const imgs=panels.slice(0,4).map(src).filter(u=>typeof u==='string' && u.length>30);
-    if(!imgs.length) return toast('패널 사진이 아직 안 올라갔습니다. 잠시 뒤 다시 눌러주세요');
+    await retryUploads();
+    const imgs=새사진.slice(0,4)
+      .map(p=>p.local || blobs[p.id] || (p.fileId? 'drive:'+p.fileId : null))
+      .filter(u=>typeof u==='string' && u.length>10);
+    if(!imgs.length) return toast('사진이 아직 안 올라갔습니다. 잠시 뒤 다시 눌러주세요');
+
     const out=await call('genQuiz',{ images:imgs, count:8 });
-    S.aiQ=shuffle(out.questions,CONFIG.TRIP_DATE).slice(0,6); save(); render();
-    toast(S.aiQ.length+'문제 준비 완료');
+
+    await pull();                                   // 상대가 방금 만든 게 있으면 받아오고
+    const 기존=Array.isArray(S.aiQ)? S.aiQ : [];
+    const 새것=shuffle(out.questions, CONFIG.TRIP_DATE+새사진[0].id)
+      .filter(q=>!기존.some(x=>x.q===q.q))
+      .slice(0,4);                                   // 한 번에 너무 많이 늘지 않게
+    S.aiQ=기존.concat(새것);
+    S.aiUsed=(S.aiUsed||[]).concat(새사진.slice(0,4).map(p=>p.id));
+    save(); render();
+    toast(새것.length+'문제를 더했습니다 (모두 '+S.aiQ.length+'개)');
   }catch(e){ toast('실패: '+e.message); }
 }
 
@@ -1102,7 +1191,7 @@ function 답줄(라벨, 값, 맞음){
 function queue(){
   const out=[];
   S.customQ.forEach(q=>out.push({id:q.id,kind:'free',text:q.q,truth:q.a,by:q.by,from:placeOf(q.slot)}));
-  S.aiQ.forEach((q,i)=>out.push({id:'ai'+i,kind:'choice',text:q.q,choices:q.choices,truth:q.answer,from:'발해역사관'}));
+  S.aiQ.forEach((q,i)=>out.push({id:'ai'+i,kind:'choice',text:q.q,choices:q.choices,truth:q.answer,from:placeOf('balhae')}));
   const day1=TRIP.filter(t=>t.day===1).map(t=>t.id);
   const pool=S.photos.filter(p=>day1.includes(p.slot));
   shuffle(pool,CONFIG.TRIP_DATE+'blur').slice(0,2).forEach((p,i)=>out.push({
@@ -1128,7 +1217,7 @@ function vShow(){
           <b>${r.ok?'✓':'○'} ${esc(r.t)}</b>
           ${r.ok?'':`<div class="muted" style="font-size:12.5px">${r.미비.length
             ? r.미비.map(k=>esc(nameOf(k))).join(', ')+' 아직'
-            : '발해역사관에서 만들어주세요'}</div>`}</div>`).join('')}
+            : esc(placeOf('balhae'))+' 에서 만들어주세요'}</div>`}</div>`).join('')}
       </div>
       <p class="muted center" style="margin:16px 0 0;font-size:12px">
         <button style="font-size:12.5px;padding:8px 14px" data-run="forceShow">빠진 게 있어도 시작</button></p>
@@ -1549,10 +1638,16 @@ function screenMe(){
         <div>사진 ${S.photos.filter(p=>p.by===other()).length}장 ·
              색 ${colorShots(other()).length}/${CELLS}칸 ·
              문제 ${S.customQ.filter(q=>q.by===other()).length}개</div></div>
+      ${저장실패?`<div class="answer" style="border-color:var(--red);border-style:solid">
+        <b>⚠ 이 기기 저장 공간이 찼습니다</b>
+        <div>사진 몇 장이 기기에 안 남아 있을 수 있습니다.
+        서버에 올라간 것은 안전해요. 위 "지금 주고받기" 를 눌러 올려주세요.</div></div>`:''}
+      <div class="answer"><b>자동으로</b>
+        <div>입력할 때마다 올리고, 4초마다 받아옵니다</div></div>
       <div class="answer"><b>사진 올리기</b>
         <div>${S.photos.filter(p=>!p.url).length? S.photos.filter(p=>!p.url).length+'장 대기 중':'전부 올렸습니다'}</div></div>
     </div>
-    <button class="wide" style="margin-top:11px" data-run="지금동기화">지금 맞춰보기</button>
+    <button class="wide" style="margin-top:11px" data-run="지금동기화">🔄 지금 주고받기</button>
     <button class="wide" style="margin-top:8px" data-run="leave">나가기</button>
     <button class="wide" style="margin-top:9px" data-run="wipe">전부 지우기</button></div>`;
 }
@@ -1560,11 +1655,15 @@ function 지난시간(ts){
   const s=Math.max(0,Math.round((Date.now()-ts)/1000));
   return s<60? s+'초' : s<3600? Math.round(s/60)+'분' : Math.round(s/3600)+'시간';
 }
+/* 평소엔 알아서 돕니다. 이건 지금 당장 시키는 버튼이에요.
+   내 기록 올리기 → 밀린 사진 올리기 → 상대 기록 받아오기 */
 async function 지금동기화(){
   if(!CONFIG.API_URL) return toast('서버가 설정되지 않았습니다');
-  toast('맞춰보는 중…');
+  toast('주고받는 중…');
+  const 전=S.photos.length;
   await push(); await retryUploads(); await pull(); render();
-  toast('맞췄습니다');
+  const 늘어난것=S.photos.length-전;
+  toast(늘어난것>0? '상대 사진 '+늘어난것+'장을 받았습니다' : '최신입니다');
 }
 function leave(){ S.names[me]=''; me=null; store.set('me',''); skipWait=false; save(); render(); }
 function wipe(){ if(confirm('사진과 점수까지 전부 지웁니다. 계속할까요?')){ S=blank(); me=null; store.set('me',''); save(); render(); } }
@@ -1582,6 +1681,7 @@ function wipe(){ if(confirm('사진과 점수까지 전부 지웁니다. 계속�
   ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>drag=false));
 })();
 
+사진불러오기();
 render(); pull();
 
 </script>
