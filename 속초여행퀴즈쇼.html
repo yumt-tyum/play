@@ -3,192 +3,257 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#EAF6F3">
+<meta name="theme-color" content="#F3EEDC">
 <title>속초 2일, 우리 둘</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* ─────────────────────────────────────────────
-   토큰
-   ───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   천 조각 · 자수 · 조각보
+   ═══════════════════════════════════════════════ */
 :root{
-  --deep:#1F4E52;      /* 잉크 */
-  --sea:#6FC7BE;       /* 청록 */
-  --sea-2:#A8E0D8;     /* 옅은 청록 */
-  --sand:#F3E3C9;      /* 모래 */
-  --cream:#FFFAF2;     /* 크림 */
-  --coral:#FF8F6B;     /* 산호 */
-  --bg:#EAF6F3;
-  --muted:#6E8A8C;
-
-  --r:26px;
-  --clay: 7px 7px 15px rgba(90,130,130,.20),
-          -6px -6px 13px rgba(255,255,255,.92);
-  --clay-in: inset 4px 4px 9px rgba(90,130,130,.18),
-             inset -4px -4px 9px rgba(255,255,255,.90);
-  --clay-sm: 4px 4px 9px rgba(90,130,130,.18),
-             -3px -3px 8px rgba(255,255,255,.90);
+  --paper:#FBF3E2;      /* 무명천 */
+  --paper-2:#F2E6CC;
+  --red:#C94A42;        /* 빨강 실 */
+  --red-2:#E68B7E;
+  --green:#6B9A52;      /* 초록 실 */
+  --green-2:#A9C68A;
+  --denim:#5A7CA3;      /* 데님 */
+  --denim-d:#456B8E;
+  --mustard:#E0A93A;
+  --pink:#E4989E;
+  --plum:#8878B0;
+  --sky:#8CBBD4;
+  --ink:#4A3B32;        /* 갈색 잉크 */
+  --muted:#8A7663;
+  --stitch:#C9A98A;     /* 실 색 */
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
-  background:var(--bg);
-  color:var(--deep);
+  color:var(--ink);
   font-family:'Gowun Dodum',system-ui,sans-serif;
-  font-size:16px; line-height:1.65;
-  padding:0 0 148px;
+  font-size:16px;line-height:1.68;
+  padding:0 0 152px;
   overscroll-behavior-y:contain;
+  /* 수채 체크 바탕 */
+  background-color:#F4EEDD;
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(107,154,82,.15) 0 24px, transparent 24px 48px),
+    repeating-linear-gradient(90deg, rgba(107,154,82,.15) 0 24px, transparent 24px 48px),
+    repeating-linear-gradient(0deg,  rgba(201,74,66,.11) 0 5px,  transparent 5px 48px),
+    repeating-linear-gradient(90deg, rgba(201,74,66,.11) 0 5px,  transparent 5px 48px);
+  background-attachment:fixed;
 }
-h1,h2,h3,.jua,button,.tab{font-family:'Jua',sans-serif;font-weight:400;letter-spacing:-.01em}
-.wrap{max-width:520px;margin:0 auto;padding:0 18px}
+.wrap{max-width:520px;margin:0 auto;padding:0 17px}
 
-/* ─────────────────────────────────────────────
-   헤더 — 밀물선
-   ───────────────────────────────────────────── */
-header{padding:26px 0 14px;position:relative}
-header .eyebrow{font-size:12px;color:var(--muted);letter-spacing:.14em}
-header h1{font-size:27px;margin:2px 0 12px;line-height:1.25}
-.tide{height:10px;border-radius:99px;background:var(--sand);box-shadow:var(--clay-in);overflow:hidden}
-.tide i{display:block;height:100%;border-radius:99px;
-  background:linear-gradient(90deg,var(--sea-2),var(--sea));
-  transition:width .7s cubic-bezier(.2,.9,.3,1)}
-.tide-label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:7px}
-
-/* ─────────────────────────────────────────────
-   공통 부품
-   ───────────────────────────────────────────── */
-.card{background:var(--cream);border-radius:var(--r);box-shadow:var(--clay);padding:20px;margin:16px 0}
-.card.tight{padding:16px}
-.pill{display:inline-block;background:var(--sea-2);color:var(--deep);
-  border-radius:99px;padding:3px 12px;font-size:12px;box-shadow:var(--clay-sm)}
-.pill.sand{background:var(--sand)}
-.pill.coral{background:var(--coral);color:#fff}
-.pill.ghost{background:transparent;box-shadow:none;color:var(--muted);padding-left:0}
-
-button{
-  font-size:16px;border:0;cursor:pointer;color:var(--deep);
-  background:var(--cream);border-radius:18px;padding:13px 18px;
-  box-shadow:var(--clay-sm);transition:transform .12s, box-shadow .12s;
+/* ── 뜨개 줄무늬 ─────────────────────────────── */
+.knit{
+  height:15px;border-radius:8px;overflow:hidden;position:relative;
+  background:var(--paper-2);
+  box-shadow:inset 0 2px 4px rgba(74,59,50,.16);
 }
-button:active{transform:translateY(2px);box-shadow:var(--clay-in)}
-button:focus-visible{outline:3px solid var(--sea);outline-offset:3px}
-button.primary{background:linear-gradient(150deg,var(--sea),#57B4AC);color:#fff}
-button.coral{background:var(--coral);color:#fff}
-button.wide{display:block;width:100%}
-button[disabled]{opacity:.45;cursor:not-allowed}
-button.sel{box-shadow:var(--clay-in);background:var(--sea-2)}
-
-input,textarea,select{
-  font-family:inherit;font-size:16px;color:var(--deep);width:100%;
-  background:var(--bg);border:0;border-radius:16px;padding:13px 15px;
-  box-shadow:var(--clay-in);outline:none;
+.knit i{
+  display:block;height:100%;border-radius:8px;
+  transition:width .8s cubic-bezier(.2,.9,.3,1);
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.45) 0 3px, transparent 3px 8px),
+    linear-gradient(90deg,var(--red),var(--mustard),var(--green),var(--sky),var(--plum),var(--pink));
 }
-input:focus,textarea:focus{outline:2px solid var(--sea);outline-offset:2px}
-textarea{min-height:80px;resize:vertical}
-label{display:block;font-size:13.5px;color:var(--muted);margin:14px 0 6px}
-.row{display:flex;gap:10px}
-.row>*{flex:1}
-.stack>*+*{margin-top:10px}
+
+/* ── 머리말: 잘라 붙인 종이 ─────────────────── */
+header{padding:26px 0 15px}
+.cut{display:inline-block;background:#FFFDF7;padding:2px 11px;margin:0 3px 5px 0;
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:25px;color:#2E2620;
+  box-shadow:1px 2px 0 rgba(74,59,50,.22)}
+.cut:nth-child(1){transform:rotate(-2.2deg)}
+.cut:nth-child(2){transform:rotate(1.4deg)}
+.cut:nth-child(3){transform:rotate(-1deg)}
+.eyebrow{font-size:12px;color:var(--muted);letter-spacing:.16em;margin-bottom:9px}
+.tide-label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:8px}
+
+/* ── 천 조각 카드 ───────────────────────────── */
+.card{
+  background:var(--paper);border-radius:18px;padding:22px;margin:17px 0;position:relative;
+  box-shadow:0 3px 0 rgba(74,59,50,.10), 0 10px 22px rgba(74,59,50,.10);
+}
+.card::before{content:'';position:absolute;inset:7px;border:2px dashed var(--stitch);
+  border-radius:12px;pointer-events:none;opacity:.55}
+.card.tight{padding:16px 18px}
+
+/* 라벨 액자 — 참고 이미지 3의 틀 */
+.label{
+  background:#FCF6E8;border:3px solid var(--red);border-radius:13px;
+  padding:16px 18px;margin:17px 0;position:relative;
+  box-shadow:0 3px 0 rgba(74,59,50,.13), 0 9px 18px rgba(74,59,50,.10);
+}
+.label::before{content:'';position:absolute;inset:4px;border:1.5px solid var(--red);
+  border-radius:9px;pointer-events:none;opacity:.5}
+
+h1,h2,h3,.jua{font-family:'Jua',sans-serif;font-weight:400;letter-spacing:-.01em;margin:0}
+h2{font-size:20px}
 .muted{color:var(--muted);font-size:13.5px}
 .center{text-align:center}
+.stack>*+*{margin-top:10px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
 
-/* ─────────────────────────────────────────────
-   타임라인
-   ───────────────────────────────────────────── */
-.slot{display:flex;gap:14px;align-items:stretch;margin:14px 0;text-align:left;width:100%;
-  background:var(--cream);border-radius:22px;box-shadow:var(--clay);padding:15px 16px}
-.slot .t{font-family:'Jua';font-size:13px;color:var(--sea);min-width:44px;padding-top:2px}
-.slot .body{flex:1}
-.slot .place{font-family:'Jua';font-size:17px;display:block}
-.slot .desc{font-size:13px;color:var(--muted);display:block;margin-top:2px}
-.slot .mark{align-self:center;font-size:19px}
-.slot.done{background:var(--sand)}
-.slot.locked{opacity:.55}
-.day-head{display:flex;align-items:center;gap:10px;margin:26px 0 4px}
-.day-head h2{font-size:19px;margin:0}
-.day-head hr{flex:1;border:0;height:4px;border-radius:99px;background:var(--sand);box-shadow:var(--clay-in)}
+/* ── 헝겊 이름표 ────────────────────────────── */
+.tag{display:inline-block;background:var(--green-2);color:#33421F;
+  border-radius:99px;padding:3px 13px;font-size:12px;font-family:'Jua';
+  box-shadow:0 2px 0 rgba(74,59,50,.16)}
+.tag.red{background:var(--red);color:#fff}
+.tag.sand{background:var(--paper-2);color:var(--muted)}
+.tag.sky{background:var(--sky);color:#1F3A48}
 
-/* ─────────────────────────────────────────────
-   시그니처 — 조개 봉인
-   ───────────────────────────────────────────── */
-.shell{position:relative;border-radius:24px;padding:18px;background:var(--sand);box-shadow:var(--clay);overflow:hidden}
-.shell .lid{
-  position:absolute;inset:0;background:linear-gradient(160deg,var(--sea-2),var(--sea));
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;
-  transition:transform .85s cubic-bezier(.16,1,.3,1);transform-origin:top center;z-index:2;
+/* ── 단추 버튼 ──────────────────────────────── */
+button{
+  font-family:'Jua',sans-serif;font-size:15.5px;border:0;cursor:pointer;
+  color:var(--ink);background:var(--paper-2);border-radius:15px;padding:13px 18px;
+  position:relative;box-shadow:0 3px 0 rgba(74,59,50,.20);
+  transition:transform .1s, box-shadow .1s;
 }
-.shell .lid span{font-family:'Jua';font-size:15px}
-.shell .lid small{font-size:12px;opacity:.9}
-.shell.open .lid{transform:rotateX(-104deg)}
-.shell .ridges{position:absolute;inset:0;opacity:.22;
-  background:repeating-linear-gradient(100deg,transparent 0 13px,rgba(255,255,255,.7) 13px 15px)}
-.answer{background:var(--cream);border-radius:16px;padding:11px 14px;box-shadow:var(--clay-sm)}
-.answer b{font-family:'Jua';font-size:12.5px;color:var(--sea)}
+button::before{content:'';position:absolute;inset:4px;border:1.5px dashed rgba(255,255,255,.7);
+  border-radius:11px;pointer-events:none}
+button:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,0)}
+button:focus-visible{outline:3px solid var(--mustard);outline-offset:3px}
+button.primary{background:var(--red);color:#FFF6EC}
+button.green{background:var(--green);color:#F5FBEF}
+button.denim{background:var(--denim);color:#F2F7FB}
+button.wide{display:block;width:100%}
+button[disabled]{opacity:.45;cursor:not-allowed}
+button.sel{background:var(--mustard);color:#3A2C10}
 
-/* ─────────────────────────────────────────────
-   사진
-   ───────────────────────────────────────────── */
-.shots{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.shot{position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--clay-sm);background:var(--sand);aspect-ratio:3/4}
-.shot img{width:100%;height:100%;object-fit:cover;display:block}
-.shot .who{position:absolute;left:8px;bottom:8px;background:rgba(255,250,242,.92);
-  border-radius:99px;padding:2px 10px;font-size:11.5px;font-family:'Jua'}
-.shot.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;box-shadow:var(--clay-in)}
-.blurwrap{border-radius:22px;overflow:hidden;box-shadow:var(--clay);background:#000;aspect-ratio:4/3}
-.blurwrap img{width:100%;height:100%;object-fit:cover;transition:filter .6s}
+/* ── 천 입력칸 ──────────────────────────────── */
+input,textarea{
+  font-family:inherit;font-size:16px;color:var(--ink);width:100%;
+  background:#FFFDF6;border:2px dashed var(--stitch);border-radius:13px;
+  padding:12px 14px;outline:none;
+}
+input:focus,textarea:focus{border-color:var(--red);border-style:solid}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+
+/* ── 일정 조각 ──────────────────────────────── */
+.slot{display:flex;gap:13px;align-items:stretch;margin:12px 0;text-align:left;width:100%;
+  background:var(--paper);border-radius:16px;padding:14px 15px;font-family:'Gowun Dodum';
+  box-shadow:0 3px 0 rgba(74,59,50,.12), 0 7px 14px rgba(74,59,50,.08)}
+.slot::before{content:'';position:absolute;inset:5px;border:1.5px dashed var(--stitch);
+  border-radius:11px;pointer-events:none;opacity:.5}
+.slot .t{font-family:'Jua';font-size:13px;color:var(--red);min-width:44px;padding-top:2px}
+.slot .body{flex:1}
+.slot .place{font-family:'Jua';font-size:16.5px;display:block}
+.slot .desc{font-size:12.5px;color:var(--muted);display:block;margin-top:1px}
+.slot .mark{align-self:center;font-size:18px}
+.slot.done{background:var(--green-2)}
+.day-head{display:flex;align-items:center;gap:10px;margin:26px 0 6px}
+.day-head h2{font-size:18px}
+.day-head .knit{flex:1;height:11px}
+.day-head .knit i{width:100%}
+
+/* ── 조각보 주머니 (봉인) ───────────────────── */
+.pocket{position:relative;border-radius:15px;padding:16px;overflow:hidden;
+  background:var(--paper-2);box-shadow:inset 0 2px 6px rgba(74,59,50,.14)}
+.pocket .flap{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;color:#3A2C10;z-index:2;
+  transition:transform .9s cubic-bezier(.16,1,.3,1);transform-origin:top center;
+  background-color:var(--mustard);
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(255,255,255,.42) 0 9px, transparent 9px 18px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.42) 0 9px, transparent 9px 18px);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.5);
+}
+.pocket .flap span{font-family:'Jua';font-size:15px}
+.pocket .flap small{font-size:11.5px;opacity:.8}
+.pocket.open .flap{transform:rotateX(-105deg)}
+.answer{background:#FFFDF6;border-radius:11px;padding:10px 13px;
+  border:2px dashed var(--stitch)}
+.answer b{font-family:'Jua';font-size:12px;color:var(--red)}
+
+/* ── 사진: 대지에 붙인 인화지 ───────────────── */
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.shot{position:relative;border-radius:6px;overflow:hidden;background:#FFFDF6;
+  padding:7px 7px 26px;aspect-ratio:3/4;
+  box-shadow:0 3px 0 rgba(74,59,50,.14), 0 8px 16px rgba(74,59,50,.12)}
+.shot:nth-child(odd){transform:rotate(-1.3deg)}
+.shot:nth-child(even){transform:rotate(1.1deg)}
+.shot img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px}
+.shot .who{position:absolute;left:0;right:0;bottom:5px;text-align:center;
+  font-size:11.5px;font-family:'Jua';color:var(--muted)}
+.shot.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);
+  font-size:12.5px;background:var(--paper-2);border:2px dashed var(--stitch);padding:7px}
+.blurwrap{border-radius:8px;overflow:hidden;background:#FFFDF6;padding:8px;
+  box-shadow:0 3px 0 rgba(74,59,50,.14), 0 8px 16px rgba(74,59,50,.12)}
+.blurwrap img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;
+  border-radius:3px;transition:filter .7s}
 
 /* 오버레이 촬영 */
-.cam{position:relative;border-radius:22px;overflow:hidden;background:#000;aspect-ratio:3/4;box-shadow:var(--clay)}
+.cam{position:relative;border-radius:8px;overflow:hidden;background:#2E2620;
+  aspect-ratio:3/4;box-shadow:0 3px 0 rgba(74,59,50,.16), 0 9px 18px rgba(74,59,50,.14)}
 .cam video{width:100%;height:100%;object-fit:cover;display:block}
 .cam .ghostimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .cam .grid{position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(to right,transparent 33%,rgba(255,255,255,.28) 33% 33.4%,transparent 33.4% 66.6%,rgba(255,255,255,.28) 66.6% 67%,transparent 67%),
-             linear-gradient(to bottom,transparent 33%,rgba(255,255,255,.28) 33% 33.4%,transparent 33.4% 66.6%,rgba(255,255,255,.28) 66.6% 67%,transparent 67%)}
+  background:linear-gradient(to right,transparent 33%,rgba(255,255,255,.3) 33% 33.4%,transparent 33.4% 66.6%,rgba(255,255,255,.3) 66.6% 67%,transparent 67%),
+             linear-gradient(to bottom,transparent 33%,rgba(255,255,255,.3) 33% 33.4%,transparent 33.4% 66.6%,rgba(255,255,255,.3) 66.6% 67%,transparent 67%)}
+input[type=range]{border:0;padding:0;background:transparent;accent-color:var(--red)}
 
-/* ─────────────────────────────────────────────
-   퀴즈쇼
-   ───────────────────────────────────────────── */
-.score{display:flex;gap:12px;margin:14px 0}
-.score div{flex:1;background:var(--cream);border-radius:20px;box-shadow:var(--clay);padding:13px;text-align:center}
-.score .n{font-family:'Jua';font-size:31px;line-height:1.1}
-.score .nm{font-size:12.5px;color:var(--muted)}
-.score div.lead{background:linear-gradient(150deg,var(--sea-2),var(--sea));color:#fff}
-.score div.lead .nm{color:rgba(255,255,255,.88)}
-.rounds{display:flex;gap:7px;margin:12px 0 4px;flex-wrap:wrap}
-.rounds button{flex:1;min-width:56px;padding:9px 6px;font-size:12.5px;text-align:center}
-.qbox{background:var(--sand);border-radius:22px;padding:19px;box-shadow:var(--clay);margin:14px 0}
-.qbox .qn{font-size:12px;color:var(--sea-deep,#3E8F8B);font-family:'Jua'}
-.qbox .qt{font-size:18.5px;font-family:'Jua';line-height:1.45;margin:6px 0 14px}
-.choice{display:block;width:100%;text-align:left;margin:8px 0}
-.choice.ok{background:var(--sea);color:#fff}
-.choice.no{background:#F0C4B6}
+/* ── 문제 카드 ──────────────────────────────── */
+.qbox{background:#FCF6E8;border:3px solid var(--red);border-radius:15px;
+  padding:20px;margin:15px 0;position:relative;
+  box-shadow:0 3px 0 rgba(74,59,50,.13), 0 9px 18px rgba(74,59,50,.10)}
+.qbox::before{content:'';position:absolute;inset:4px;border:1.5px solid var(--red);
+  border-radius:11px;pointer-events:none;opacity:.45}
+.qbox .qt{font-size:18px;font-family:'Jua';line-height:1.48;margin:0 0 14px}
+.choice{display:block;width:100%;text-align:left;margin:8px 0;background:var(--paper)}
+.choice.ok{background:var(--green);color:#F5FBEF}
+.choice.no{background:var(--red-2);color:#4A2620}
 
-/* 토스트 & 상태 */
-#toast{position:fixed;left:50%;bottom:88px;transform:translate(-50%,20px);opacity:0;
-  background:var(--deep);color:var(--cream);padding:11px 20px;border-radius:99px;font-size:14px;
+/* ── 아래 데님 띠 ───────────────────────────── */
+.bottom{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  padding:13px 14px calc(10px + env(safe-area-inset-bottom));
+  background-color:#5A7CA3;
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,.055) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,.05) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg,#6D8FB6,#4C6E95);
+}
+/* 레이스 가장자리 */
+.bottom::before{
+  content:'';position:absolute;top:-10px;left:0;right:0;height:11px;
+  background:radial-gradient(circle at 8px 11px, #FBF3E2 7.2px, transparent 7.6px) repeat-x;
+  background-size:16px 11px;
+}
+.bottom .inner{max-width:520px;margin:0 auto}
+nav{display:flex;gap:8px;margin-top:10px}
+nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.92);
+  box-shadow:0 3px 0 rgba(30,45,60,.35)}
+
+/* 실시간 점수 — 헝겊 이름표 */
+.live{display:flex;gap:9px;align-items:center}
+.live .p{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--paper);border-radius:13px;padding:7px 14px;
+  box-shadow:0 3px 0 rgba(30,45,60,.3)}
+.live .p .nm{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live .p .n{font-family:'Jua';font-size:22px;line-height:1}
+.live .p.lead{background:var(--mustard);color:#3A2C10}
+.live .vs{font-size:11px;color:#E4EEF6;font-family:'Jua';min-width:34px;text-align:center}
+
+/* ── 기타 ───────────────────────────────────── */
+#toast{position:fixed;left:50%;bottom:150px;transform:translate(-50%,20px);opacity:0;
+  background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:99px;font-size:14px;
   transition:.3s;pointer-events:none;z-index:60;max-width:88vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
-.netbar{position:fixed;top:0;left:0;right:0;background:var(--coral);color:#fff;
-  font-size:12.5px;text-align:center;padding:5px;z-index:70;display:none}
+.netbar{position:fixed;top:0;left:0;right:0;background:var(--red);color:#FFF6EC;
+  font-size:12.5px;text-align:center;padding:5px;z-index:70;display:none;font-family:'Jua'}
 .netbar.on{display:block}
-
-/* 하단 바 */
-.bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(234,246,243,.94);
-  backdrop-filter:blur(12px);padding:10px 14px calc(9px + env(safe-area-inset-bottom));z-index:50}
-.bottom .inner{max-width:520px;margin:0 auto}
-nav{display:flex;gap:9px;margin-top:9px}
-nav button{flex:1;padding:11px 4px;font-size:13px}
-
-/* 실시간 점수판 */
-.live{display:flex;gap:9px;align-items:stretch}
-.live .p{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;
-  background:var(--cream);border-radius:17px;box-shadow:var(--clay-sm);padding:8px 15px}
-.live .p .nm{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.live .p .n{font-family:'Jua';font-size:23px;line-height:1}
-.live .p.lead{background:linear-gradient(150deg,var(--sea-2),var(--sea));color:#fff}
-.live .vs{align-self:center;font-size:11.5px;color:var(--muted);font-family:'Jua'}
-
+.dots{display:flex;gap:7px;justify-content:center;margin:16px 0}
+.dots i{width:11px;height:11px;border-radius:50%;background:var(--stitch);
+  animation:blink 1.3s infinite}
+.dots i:nth-child(2){animation-delay:.2s}
+.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -198,10 +263,10 @@ nav button{flex:1;padding:11px 4px;font-size:13px}
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">2일 · 12개 슬롯 · 둘</div>
-    <h1 id="hdr">속초 2일, 우리 둘</h1>
-    <div class="tide"><i id="tide" style="width:0%"></i></div>
-    <div class="tide-label"><span id="tideL">아직 출발 전</span><span id="tideR">0 / 12</span></div>
+    <div class="eyebrow">2일 · 10개 조각 · 둘</div>
+    <div><span class="cut">속초</span><span class="cut">2일,</span><span class="cut">우리 둘</span></div>
+    <div class="knit" style="margin-top:10px"><i id="tide" style="width:0%"></i></div>
+    <div class="tide-label"><span id="tideL">아직 출발 전</span><span id="tideR">0 / 10</span></div>
   </header>
   <main id="app"></main>
 </div>
@@ -210,7 +275,7 @@ nav button{flex:1;padding:11px 4px;font-size:13px}
   <div class="live" id="live"></div>
   <nav>
     <button onclick="go('home')">일정</button>
-    <button onclick="go('slot','show')">퀴즈쇼</button>
+    <button onclick="go('slot','show')">퀴즈</button>
     <button onclick="go('album')">앨범</button>
     <button onclick="go('me')">나</button>
   </nav>
@@ -219,129 +284,113 @@ nav button{flex:1;padding:11px 4px;font-size:13px}
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    0. 설정
-   ═══════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════ */
 const CONFIG = {
-  // Apps Script 웹앱 배포 URL. 비워두면 이 기기에만 저장됩니다(패스앤플레이).
-  API_URL: '',
-  // 개발 중에는 true. 실전 문항 대신 더미 문항이 나옵니다.
-  USE_DUMMY: true,
-  // 여행 날짜 — 문항 셔플 시드로도 씁니다.
+  API_URL: '',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
+  USE_DUMMY: true,        // 개발 중 true. 출발 아침에 false 로.
   TRIP_DATE: '2026-08-15',
-  // 이름은 앱 첫 화면에서 받습니다. 여기에 미리 적어두면 그 값을 씁니다.
-  NAMES: { A:'', B:'' },
   POLL_MS: 4000
 };
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    1. 일정
-   ═══════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════ */
 const TRIP = [
-  { id:'move',    day:1, time:'08:00', place:'서울 → 고성',   type:'seal',
-    desc:'오늘 하루를 미리 봉인합니다', mark:'🔒' },
-  { id:'checkin', day:1, time:'10:30', place:'소노캄 체크인',  type:'capture',
-    desc:'상대 몰래 방 사진 한 장', mark:'🔑', hint:'커튼 색, 슬리퍼 개수, 창밖 풍경 — 나중에 문제가 됩니다', solo:true },
-  { id:'lunch',   day:1, time:'11:30', place:'가보오토종닭',   type:'capture',
-    desc:'메뉴판과 영수증', mark:'🍗', hint:'영수증은 총액이 보이게', guess:'오늘 점심 총액' },
-  { id:'balhae',  day:1, time:'16:00', place:'발해역사관',     type:'ai',
+  { id:'move',    day:1, time:'08:00', place:'서울 → 고성',  type:'seal',
+    desc:'오늘 하루를 미리 봉인합니다', mark:'🧵' },
+  { id:'checkin', day:1, time:'10:30', place:'소노캄 체크인', type:'capture', noPhoto:true,
+    desc:'방 둘러보고 문제 하나', mark:'🔑',
+    hint:'커튼 색, 슬리퍼 개수, 창밖에 보이는 것 — 상대가 놓쳤을 만한 걸로' },
+  { id:'lunch',   day:1, time:'11:30', place:'가보오토종닭',  type:'capture',
+    desc:'메뉴판 한 장, 문제 하나', mark:'🍗',
+    hint:'상대가 뭘 남겼는지, 반찬이 몇 가지였는지 — 지금 봐두세요' },
+  { id:'balhae',  day:1, time:'16:00', place:'발해역사관',    type:'ai',
     desc:'패널 찍으면 문제가 나옵니다', mark:'🏛' },
-  { id:'brew',    day:1, time:'18:00', place:'크래프트루트',   type:'brew',
-    desc:'탭리스트 · 이름 짓기 · 테이스팅', mark:'🍺' },
-  { id:'show',    day:1, time:'19:30', place:'숙소 퀴즈쇼',    type:'show',
-    desc:'오늘 모은 걸 전부 개봉', mark:'🏆' },
-  { id:'m2', day:2, time:'12:00', place:'바다정원',   type:'mission', mode:'theme', theme:'따뜻한 것',
+  { id:'brew',    day:1, time:'18:00', place:'크래프트루트',  type:'brew',
+    desc:'신메뉴 이름 짓기', mark:'🍺' },
+  { id:'show',    day:1, time:'19:30', place:'숙소 퀴즈',     type:'show',
+    desc:'오늘 모은 걸 한 문제씩', mark:'🏆' },
+  { id:'m2', day:2, time:'12:00', place:'바다정원', type:'mission', mode:'theme', theme:'따뜻한 것',
     desc:'같은 주제 「따뜻한 것」', mark:'☕' },
-  { id:'m3', day:2, time:'14:00', place:'바다',       type:'mission', mode:'theme', theme:'이 여행을 한 단어로',
+  { id:'m3', day:2, time:'14:00', place:'바다',     type:'mission', mode:'theme', theme:'이 여행을 한 단어로',
     desc:'같은 주제 「이 여행을 한 단어로」', mark:'🌊' },
   { id:'m4', day:2, time:'15:00', place:'모녀가리비', type:'mission', mode:'overlay',
     desc:'같은 구도 · 상대 사진 겹쳐 찍기', mark:'🐚' },
-  { id:'end', day:2, time:'16:30', place:'귀가길',    type:'finale',
+  { id:'end', day:2, time:'16:30', place:'귀가길',   type:'finale',
     desc:'시상식', mark:'🎬' }
 ];
 const SLOT = id => TRIP.find(s=>s.id===id);
 
-/* 봉인 문항 — 정답이 아직 세상에 없으므로 미리 봐도 안전 */
 const SEALS = [
-  { id:'s1', q:'오늘 총 지출, 얼마 나올까?',      unit:'원' },
-  { id:'s2', q:'소노캄에 실제로 몇 시에 도착할까?', unit:'' },
-  { id:'s3', q:'오늘 상대가 제일 많이 할 말은?',   unit:'' }
+  { id:'s3', q:'오늘 상대가 제일 많이 할 말은?', unit:'' }
 ];
-/* ═══════════════════════════════════════════════════
-   2. 저장소 — localStorage 있으면 쓰고, 없으면 메모리
-   ═══════════════════════════════════════════════════ */
-const mem = {};
-const store = {
+
+/* ═══════════════════════════════════════════════
+   2. 저장소
+   ═══════════════════════════════════════════════ */
+const mem={};
+const store={
   get(k){ try{ const v=localStorage.getItem(k); return v??mem[k]??null; }catch(e){ return mem[k]??null; } },
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); }catch(e){} }
 };
-
-/* 기본 상태 */
 const blank = () => ({
-  names:{ A:'', B:'' },
-  seals:{}, photos:[], customQ:[], aiQ:[], guesses:{},
+  names:{A:'',B:''}, seals:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
   show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
   finale:{ best:{}, titles:{}, orderScore:null },
   rev:0
 });
-let S = blank();
-let me = store.get('me') || null;
+let S=blank(), me=store.get('me')||null, skipWait=false;
+try{ const raw=store.get('state'); if(raw) S=Object.assign(blank(),JSON.parse(raw)); }catch(e){}
+function save(){ store.set('state',JSON.stringify(S)); push(); }
 
-function load(){ try{ const raw=store.get('state'); if(raw) S=Object.assign(blank(),JSON.parse(raw)); }catch(e){} }
-function save(){ store.set('state', JSON.stringify(S)); push(); }
-load();
-
-/* ═══════════════════════════════════════════════════
-   3. 통신 — Apps Script (preflight 피하려고 text/plain)
-   ═══════════════════════════════════════════════════ */
-let online = navigator.onLine, pushing=false, dirty=false;
-addEventListener('online', ()=>{ online=true; document.getElementById('netbar').classList.remove('on'); flush(); });
+/* ═══════════════════════════════════════════════
+   3. 통신
+   ═══════════════════════════════════════════════ */
+let online=navigator.onLine, pushing=false, dirty=false;
+addEventListener('online', ()=>{ online=true; document.getElementById('netbar').classList.remove('on'); if(dirty)push(); });
 addEventListener('offline',()=>{ online=false; document.getElementById('netbar').classList.add('on'); });
 
-async function call(action, payload){
-  if(!CONFIG.API_URL) throw new Error('local');
-  const r = await fetch(CONFIG.API_URL, {
+async function call(action,payload){
+  if(!CONFIG.API_URL) throw new Error('서버가 설정되지 않았습니다');
+  const r=await fetch(CONFIG.API_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({ action, payload })
+    body:JSON.stringify({action,payload})
   });
-  const j = await r.json();
+  const j=await r.json();
   if(!j.ok) throw new Error(j.error||'서버 오류');
   return j.data;
 }
-
 async function push(){
-  if(!CONFIG.API_URL){ return; }
-  if(!online){ dirty=true; return; }
-  if(pushing){ dirty=true; return; }
+  if(!CONFIG.API_URL) return;
+  if(!online||pushing){ dirty=true; return; }
   pushing=true;
-  try{
-    S.rev = Date.now();
-    await call('setState', { state:S });
-    dirty=false;
-  }catch(e){ dirty=true; }
-  finally{ pushing=false; }
+  try{ S.rev=Date.now(); await call('setState',{state:S}); dirty=false; }
+  catch(e){ dirty=true; } finally{ pushing=false; }
 }
-function flush(){ if(dirty) push(); }
-
 async function pull(){
-  if(!CONFIG.API_URL || !online) return;
+  if(!CONFIG.API_URL||!online) return;
   try{
-    const remote = await call('getState', {});
-    if(remote && remote.rev > (S.rev||0)){
-      S = Object.assign(blank(), remote);
-      store.set('state', JSON.stringify(S));
+    const r=await call('getState',{});
+    if(r && r.rev>(S.rev||0)){
+      S=Object.assign(blank(),r);
+      store.set('state',JSON.stringify(S));
       render();
     }
   }catch(e){}
 }
 setInterval(pull, CONFIG.POLL_MS);
 
-/* ═══════════════════════════════════════════════════
-   4. 사진 — 리사이즈 후 업로드, 실패하면 큐에 보관
-   ═══════════════════════════════════════════════════ */
-function shrink(file, max=1200, q=.8){
+</script>
+<script>
+
+/* ═══════════════════════════════════════════════
+   4. 사진
+   ═══════════════════════════════════════════════ */
+function shrink(file,max=1200,q=.8){
   return new Promise((res,rej)=>{
     const fr=new FileReader();
     fr.onerror=()=>rej(new Error('파일을 읽지 못했습니다'));
@@ -360,41 +409,32 @@ function shrink(file, max=1200, q=.8){
     fr.readAsDataURL(file);
   });
 }
-
-async function addPhoto(dataUrl, meta){
-  const p = Object.assign({
-    id:'p'+Date.now()+Math.random().toString(36).slice(2,6),
-    by:me, ts:Date.now(), local:dataUrl, url:null
-  }, meta);
+async function addPhoto(dataUrl,meta){
+  const p=Object.assign({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),
+    by:me, ts:Date.now(), local:dataUrl, url:null}, meta);
   S.photos.push(p); save(); render();
-  try{
-    const up = await call('upload', { id:p.id, dataUrl, slot:p.slot });
-    p.url = up.url; delete p.local; save();
-  }catch(e){ /* 로컬에 남아 있다가 다음 push 때 다시 시도 */ }
+  try{ const up=await call('upload',{id:p.id,dataUrl,slot:p.slot}); p.url=up.url; delete p.local; save(); }
+  catch(e){}
   return p;
 }
-const src = p => p.url || p.local || '';
-const photosOf = (slot, opt={}) => S.photos.filter(p =>
-  p.slot===slot && (!opt.mission || p.mission===opt.mission) && (!opt.by || p.by===opt.by));
-
-async function pick(meta, cb){
+const src = p => p.url||p.local||'';
+const photosOf = (slot,opt={}) => S.photos.filter(p=>
+  p.slot===slot && (!opt.mission||p.mission===opt.mission) && (!opt.by||p.by===opt.by));
+async function pick(meta,cb){
   const i=document.createElement('input');
   i.type='file'; i.accept='image/*'; i.capture='environment';
   i.onchange=async()=>{
     if(!i.files[0]) return;
     toast('줄이는 중…');
-    try{
-      const d=await shrink(i.files[0]);
-      const p=await addPhoto(d, meta);
-      toast('올렸습니다'); cb&&cb(p);
-    }catch(e){ toast(e.message); }
+    try{ const d=await shrink(i.files[0]); const p=await addPhoto(d,meta); toast('붙였습니다'); cb&&cb(p); }
+    catch(e){ toast(e.message); }
   };
   i.click();
 }
 
-/* ═══════════════════════════════════════════════════
-   5. 날짜 시드 셔플 — 미리 순서를 확인할 수 없게
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   5. 날짜 시드 셔플
+   ═══════════════════════════════════════════════ */
 function mulberry32(a){ return function(){
   a|=0; a=a+0x6D2B79F5|0;
   let t=Math.imul(a^a>>>15,1|a);
@@ -402,33 +442,35 @@ function mulberry32(a){ return function(){
   return ((t^t>>>14)>>>0)/4294967296;
 };}
 function seedOf(str){ let h=2166136261; for(const c of str){ h^=c.charCodeAt(0); h=Math.imul(h,16777619);} return h>>>0; }
-function shuffle(arr, seedStr){
+function shuffle(arr,seedStr){
   const rnd=mulberry32(seedOf(seedStr)), a=arr.slice();
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
-const DUMMY_Q = [
+const DUMMY_Q=[
   { q:'1 + 1 은?', choices:['1','2','3','4'], answer:1 },
   { q:'속초는 어느 도에 있을까?', choices:['강원','경기','충북','전남'], answer:0 },
   { q:'테스트 문항입니다. 두 번째를 고르세요.', choices:['가','나','다','라'], answer:1 }
 ];
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    6. 화면
-   ═══════════════════════════════════════════════════ */
-let view={name:'home',arg:null};
+   ═══════════════════════════════════════════════ */
+let view={name:'home',arg:null}, peek={};
 function go(name,arg){ view={name,arg}; scrollTo({top:0,behavior:'smooth'}); render(); }
-const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),2200); }
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),2200); }
 const other = () => me==='A'?'B':'A';
-const nameOf = k => (S.names&&S.names[k]) || CONFIG.NAMES[k] || (k==='A'?'왼쪽':'오른쪽');
-const named = () => !!((S.names.A||CONFIG.NAMES.A) && (S.names.B||CONFIG.NAMES.B));
+const other2 = k => k==='A'?'B':'A';
+const nameOf = k => S.names[k] || (k==='A'?'왼쪽':'오른쪽');
+const bothIn = () => !!(S.names.A && S.names.B);
 
-/* 슬롯 완료 판정 */
 function isDone(s){
   switch(s.type){
     case 'seal':    return SEALS.every(x=>S.seals[x.id]&&S.seals[x.id][me]!=null);
-    case 'capture': return photosOf(s.id,{by:me}).length>0;
+    case 'capture': return s.noPhoto ? S.customQ.some(q=>q.slot===s.id&&q.by===me)
+                                     : photosOf(s.id,{by:me}).length>0;
     case 'ai':      return S.aiQ.length>0;
     case 'brew':    return !!S.beers.names[me];
     case 'show':    return queue().length>0 && S.show.i>=queue().length;
@@ -439,66 +481,92 @@ function isDone(s){
 }
 
 function render(){
-  if(!me) return screenWho();
   const el=document.getElementById('app');
+  const bar=document.querySelector('.bottom');
+  if(!me || !S.names[me]){ bar.style.display='none'; return screenJoin(); }
+  if(!bothIn() && !skipWait){ bar.style.display='none'; return screenWait(); }
+  bar.style.display='';
+
   const n=TRIP.filter(isDone).length;
   document.getElementById('tide').style.width=(n/TRIP.length*100)+'%';
   document.getElementById('tideR').textContent=n+' / '+TRIP.length;
-  document.getElementById('tideL').textContent = n===0?'아직 출발 전' : n===TRIP.length?'다 채웠습니다' : (TRIP.filter(s=>!isDone(s))[0].place+' 차례');
+  document.getElementById('tideL').textContent =
+    n===0?'아직 출발 전' : n===TRIP.length?'다 채웠습니다' : TRIP.filter(s=>!isDone(s))[0].place+' 차례';
+
   const sc=S.show.scores, tot=queue().length, at=Math.min(S.show.i,tot);
   document.getElementById('live').innerHTML=`
     <div class="p ${sc.A>sc.B?'lead':''}"><span class="nm">${esc(nameOf('A'))}</span><span class="n">${sc.A}</span></div>
     <span class="vs">${tot? at+'/'+tot : 'vs'}</span>
     <div class="p ${sc.B>sc.A?'lead':''}"><span class="n">${sc.B}</span><span class="nm">${esc(nameOf('B'))}</span></div>`;
+
   const fn={home:screenHome,slot:screenSlot,album:screenAlbum,me:screenMe}[view.name]||screenHome;
   el.innerHTML=fn();
-  el.querySelectorAll('[data-run]').forEach(x=>x.addEventListener('click',()=>window[x.dataset.run](x.dataset.a,x.dataset.b)));
+  el.querySelectorAll('[data-run]').forEach(x=>
+    x.addEventListener('click',()=>window[x.dataset.run](x.dataset.a,x.dataset.b)));
   if(view.name==='slot'&&SLOT(view.arg)?.mode==='overlay') setTimeout(startCam,60);
 }
 
-/* ── 누구세요 ────────────────────────────────── */
-function screenWho(){
+/* ── 접속: 이름 치고 들어오기 ────────────────── */
+function screenJoin(){
   const el=document.getElementById('app');
-  if(!named()){
-    el.innerHTML=`
-    <div class="card">
-      <h2 style="margin-top:0">둘의 이름을 적어주세요</h2>
-      <p class="muted">한 번만 하면 됩니다. 다른 폰에도 그대로 넘어가요.</p>
-      <label>첫 번째 사람</label>
-      <input id="nA" placeholder="이름" value="${esc(S.names.A)}">
-      <label>두 번째 사람</label>
-      <input id="nB" placeholder="이름" value="${esc(S.names.B)}">
-      <button class="primary wide" style="margin-top:16px" id="okName">다음</button>
-    </div>`;
-    el.querySelector('#okName').addEventListener('click',()=>{
-      const a=el.querySelector('#nA').value.trim(), b=el.querySelector('#nB').value.trim();
-      if(!a||!b) return toast('두 사람 다 적어주세요');
-      if(a===b)  return toast('이름이 같으면 구분이 안 됩니다');
-      S.names={A:a,B:b}; save(); render();
-    });
-    return;
-  }
   el.innerHTML=`
-  <div class="card center">
-    <h2 style="margin-top:0">이 폰은 누구 폰인가요?</h2>
-    <p class="muted">각자 자기 이름을 누르세요. 폰마다 한 번씩입니다.</p>
-    <div class="row" style="margin-top:16px">
-      <button class="primary" data-k="A">${esc(nameOf('A'))}</button>
-      <button class="primary" data-k="B">${esc(nameOf('B'))}</button>
-    </div>
-    <button style="margin-top:14px" id="reName">이름 다시 적기</button>
+  <div class="label">
+    <h2>이름을 적고 들어오세요</h2>
+    <p class="muted" style="margin:6px 0 0">먼저 들어온 사람이 왼쪽 자리입니다.</p>
+  </div>
+  <div class="card">
+    <input id="nm" placeholder="내 이름" maxlength="10" autocomplete="off">
+    <button class="primary wide" style="margin-top:13px" id="joinBtn">들어가기</button>
+    <p class="muted center" style="margin:12px 0 0">
+      ${CONFIG.API_URL? '두 사람이 같은 방에 들어옵니다.' : '서버가 없어 이 기기에만 저장됩니다.'}</p>
   </div>`;
-  el.querySelectorAll('[data-k]').forEach(x=>x.addEventListener('click',()=>setMe(x.dataset.k)));
-  el.querySelector('#reName').addEventListener('click',()=>{ S.names={A:'',B:''}; save(); render(); });
+  const go=()=>join(el.querySelector('#nm').value.trim());
+  el.querySelector('#joinBtn').addEventListener('click',go);
+  el.querySelector('#nm').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
 }
-function setMe(k){ me=k; store.set('me',k); render(); }
+async function join(name){
+  if(!name) return toast('이름을 적어주세요');
+  if(CONFIG.API_URL){
+    toast('들어가는 중…');
+    try{
+      const r=await call('join',{name});
+      S=Object.assign(blank(),r.state); me=r.seat;
+    }catch(e){ return toast(e.message); }
+  }else{
+    const n=S.names;
+    const seat = n.A===name?'A' : n.B===name?'B' : !n.A?'A' : !n.B?'B' : null;
+    if(!seat) return toast('이미 두 사람이 들어와 있습니다');
+    n[seat]=name; me=seat;
+  }
+  store.set('me',me); save(); render(); toast(name+'님, 반갑습니다');
+}
+
+/* ── 상대 기다리기 ──────────────────────────── */
+function screenWait(){
+  const el=document.getElementById('app');
+  el.innerHTML=`
+  <div class="label center">
+    <h2>${esc(nameOf(me))}님, 들어왔습니다</h2>
+    <p class="muted" style="margin:6px 0 0">이제 한 사람만 더 들어오면 시작해요.</p>
+  </div>
+  <div class="card center">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <p class="muted" style="margin:0">상대가 같은 주소로 들어와서 이름을 적으면 됩니다.</p>
+    <button class="wide" style="margin-top:16px" id="skip">혼자 먼저 둘러보기</button>
+    <button class="wide" style="margin-top:9px" id="out">나가기</button>
+  </div>`;
+  el.querySelector('#skip').addEventListener('click',()=>{ skipWait=true; render(); });
+  el.querySelector('#out').addEventListener('click',()=>{
+    S.names[me]=''; me=null; store.set('me',''); save(); render();
+  });
+}
 
 /* ── 일정 ────────────────────────────────────── */
 function screenHome(){
   let h='';
   [1,2].forEach(d=>{
-    h+=`<div class="day-head"><h2>${d}일차</h2><hr>
-        <span class="pill sand">${d===1?'퀴즈쇼':'추억 남기기'}</span></div>`;
+    h+=`<div class="day-head"><h2>${d}일차</h2><div class="knit"><i></i></div>
+        <span class="tag ${d===1?'red':'sky'}">${d===1?'퀴즈':'추억'}</span></div>`;
     TRIP.filter(s=>s.day===d).forEach(s=>{
       const done=isDone(s);
       h+=`<button class="slot ${done?'done':''}" data-run="go" data-a="slot" data-b="${s.id}">
@@ -510,41 +578,35 @@ function screenHome(){
   });
   return h;
 }
-
-/* ── 슬롯 라우팅 ─────────────────────────────── */
 function screenSlot(){
   const s=SLOT(view.arg); if(!s) return screenHome();
-  const head=`<div class="card tight">
-    <span class="pill">${s.day}일차 ${s.time}</span>
-    <h2 style="margin:9px 0 2px">${s.mark} ${esc(s.place)}</h2>
+  const head=`<div class="label">
+    <span class="tag sand">${s.day}일차 ${s.time}</span>
+    <h2 style="margin:8px 0 2px">${s.mark} ${esc(s.place)}</h2>
     <p class="muted" style="margin:0">${esc(s.desc)}</p></div>`;
-  const body={ seal:vSeal, capture:vCapture, ai:vAI,
-               brew:vBrew, show:vShow, mission:vMission, finale:vFinale }[s.type](s);
-  return head+body;
+  return head+{ seal:vSeal, capture:vCapture, ai:vAI, brew:vBrew,
+                show:vShow, mission:vMission, finale:vFinale }[s.type](s);
 }
 
 /* ── 봉인 ────────────────────────────────────── */
+function pocket(rec,waitFor){
+  const both=rec.A!=null&&rec.B!=null;
+  return `<div class="pocket ${both?'open':''}">
+    <div class="flap"><span>🧵 봉해 두었습니다</span><small>${both?'':waitFor+' 기다리는 중'}</small></div>
+    <div class="stack">
+      <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
+      <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div>
+    </div></div>`;
+}
 function vSeal(){
-  let h=`<p class="muted">둘 다 제출해야 열립니다. 개봉은 밤 퀴즈쇼 5라운드에서.</p>`;
+  let h=`<p class="muted">둘 다 넣어야 열립니다. 개봉은 밤 퀴즈 마지막에.</p>`;
   SEALS.forEach(x=>{
     const rec=S.seals[x.id]||{};
-    const both=rec.A!=null&&rec.B!=null;
-    const mine=rec[me];
-    h+=`<div class="card">
-      <div class="jua" style="font-size:16.5px;margin-bottom:10px">${esc(x.q)}</div>`;
-    if(mine==null){
-      h+=`<div class="row"><input id="i_${x.id}" placeholder="내 예측${x.unit?' ('+x.unit+')':''}">
-          <button class="primary" style="flex:0 0 84px" data-run="sealIn" data-a="${x.id}">봉인</button></div>`;
-    }else{
-      h+=`<div class="shell ${both?'open':''}">
-            <div class="ridges"></div>
-            <div class="lid"><span>🔒 봉인됨</span><small>${both?'':nameOf(other())+' 기다리는 중'}</small></div>
-            <div class="stack">
-              <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
-              <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div>
-            </div>
-          </div>`;
-    }
+    h+=`<div class="card"><div class="jua" style="font-size:16.5px;margin-bottom:11px">${esc(x.q)}</div>`;
+    h+= rec[me]==null
+      ? `<div class="row"><input id="i_${x.id}" placeholder="내 예측${x.unit?' ('+x.unit+')':''}">
+         <button class="primary" style="flex:0 0 82px" data-run="sealIn" data-a="${x.id}">봉인</button></div>`
+      : pocket(rec,nameOf(other()));
     h+=`</div>`;
   });
   return h;
@@ -552,78 +614,57 @@ function vSeal(){
 function sealIn(id){
   const v=document.getElementById('i_'+id).value.trim();
   if(!v) return toast('한 줄이라도 적어주세요');
-  S.seals[id]=S.seals[id]||{}; S.seals[id][me]=v; save(); render(); toast('봉인했습니다');
+  S.seals[id]=S.seals[id]||{}; S.seals[id][me]=v; save(); render(); toast('봉했습니다');
 }
 
 /* ── 사진 수집 ───────────────────────────────── */
 function vCapture(s){
   const mine=photosOf(s.id,{by:me});
-  let h=`<div class="card">
-    ${s.hint?`<p class="muted" style="margin-top:0">${esc(s.hint)}</p>`:''}
-    <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 사진 추가</button>
-    ${s.solo?`<p class="muted center" style="margin-bottom:0">상대에게 안 보입니다. 퀴즈쇼에서만 열려요.</p>`:''}
-    <div class="shots" style="margin-top:14px">
-      ${mine.map(p=>`<div class="shot"><img src="${src(p)}" alt=""><span class="who">${esc(nameOf(p.by))}</span></div>`).join('')
-        || `<div class="shot empty">아직 없음</div><div class="shot empty"></div>`}
-    </div></div>`;
-  if(s.guess){
-    const g=S.guesses[s.id]||{};
-    h+=`<div class="card"><div class="jua" style="margin-bottom:8px">${esc(s.guess)} — 근접값 대결</div>`;
-    h+= g[me]!=null
-      ? `<p class="muted" style="margin:0">내 답 <b>${esc(g[me])}</b> · ${g[other()]!=null?'둘 다 냈습니다':nameOf(other())+' 기다리는 중'}</p>
-         <label>실제 금액 (영수증 보고)</label>
-         <div class="row"><input id="real_${s.id}" value="${esc(g.real??'')}" placeholder="숫자만">
-         <button style="flex:0 0 72px" data-run="setReal" data-a="${s.id}">저장</button></div>`
-      : `<div class="row"><input id="g_${s.id}" placeholder="숫자만">
-         <button class="primary" style="flex:0 0 84px" data-run="guessIn" data-a="${s.id}">제출</button></div>`;
-    h+=`</div>`;
+  let h='';
+  if(!s.noPhoto){
+    h+=`<div class="card">
+      ${s.hint?`<p class="muted" style="margin-top:0">${esc(s.hint)}</p>`:''}
+      <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 사진 붙이기</button>
+      <div class="shots" style="margin-top:15px">
+        ${mine.map(p=>`<div class="shot"><img src="${src(p)}" alt=""><span class="who">${esc(nameOf(p.by))}</span></div>`).join('')
+          || `<div class="shot empty">아직 없음</div><div class="shot empty">＋</div>`}
+      </div></div>`;
   }
-  h+=`<div class="card"><div class="jua" style="margin-bottom:4px">여기서 낼 문제</div>
-      <p class="muted" style="margin-top:0">상대가 밤에 풉니다. 정답도 같이 넣어주세요.</p>
-      <input id="cq" placeholder="예) 방 슬리퍼 몇 켤레였게?">
-      <input id="ca" placeholder="정답" style="margin-top:9px">
-      <button class="primary wide" style="margin-top:11px" data-run="addQ" data-a="${s.id}">문제 만들기</button>
-      <p class="muted" style="margin-bottom:0">내가 낸 문제 ${S.customQ.filter(q=>q.slot===s.id&&q.by===me).length}개</p></div>`;
+  h+=`<div class="card"><div class="jua">상대에게 낼 문제</div>
+    <p class="muted" style="margin-top:2px">${esc(s.hint&&s.noPhoto? s.hint : '상대가 밤에 풉니다.')}</p>
+    <input id="cq" placeholder="예) 방 슬리퍼 몇 켤레였게?" style="margin-top:10px">
+    <input id="ca" placeholder="정답" style="margin-top:9px">
+    <button class="green wide" style="margin-top:11px" data-run="addQ" data-a="${s.id}">문제 만들기</button>
+    <p class="muted center" style="margin-bottom:0">내가 낸 문제 ${S.customQ.filter(q=>q.slot===s.id&&q.by===me).length}개</p>
+  </div>`;
   return h;
 }
 function capShot(slot){ pick({slot}); }
-function guessIn(slot){
-  const v=document.getElementById('g_'+slot).value.trim();
-  if(!v) return toast('숫자를 넣어주세요');
-  S.guesses[slot]=S.guesses[slot]||{}; S.guesses[slot][me]=v; save(); render();
-}
-function setReal(slot){
-  S.guesses[slot].real=document.getElementById('real_'+slot).value.trim(); save(); toast('저장했습니다');
-}
 function addQ(slot){
   const q=document.getElementById('cq').value.trim(), a=document.getElementById('ca').value.trim();
   if(!q||!a) return toast('문제와 정답 둘 다 필요합니다');
   S.customQ.push({id:'c'+Date.now(),slot,by:me,q,a}); save(); render(); toast('문제 추가');
 }
 
-/* ── 발해역사관: 패널 → AI 문항 ──────────────── */
+/* ── 발해역사관 ──────────────────────────────── */
 function vAI(s){
   const panels=photosOf(s.id);
   return `<div class="card">
-    <p class="muted" style="margin-top:0">설명 패널을 찍으면 그 내용으로 문제가 만들어집니다.
-    둘 다 처음 보는 문제라 미리 대비할 수 없어요.</p>
+    <p class="muted" style="margin-top:0">설명 패널을 찍으면 그 내용으로 문제가 만들어집니다. 둘 다 처음 봅니다.</p>
     <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 패널 찍기</button>
-    <div class="shots" style="margin-top:14px">
+    <div class="shots" style="margin-top:15px">
       ${panels.map(p=>`<div class="shot"><img src="${src(p)}" alt=""><span class="who">${esc(nameOf(p.by))}</span></div>`).join('')
-        || `<div class="shot empty">패널 사진 없음</div><div class="shot empty"></div>`}
+        || `<div class="shot empty">패널 사진 없음</div><div class="shot empty">＋</div>`}
     </div>
-    <button class="coral wide" style="margin-top:14px" ${panels.length?'':'disabled'} data-run="genQuiz">
-      ✨ 문제 만들기 ${CONFIG.USE_DUMMY?'(더미 모드)':''}</button>
+    <button class="green wide" style="margin-top:15px" ${panels.length?'':'disabled'} data-run="genQuiz">
+      ✂️ 문제 만들기 ${CONFIG.USE_DUMMY?'(더미)':''}</button>
     <p class="muted center" style="margin-bottom:0">
-      ${S.aiQ.length? S.aiQ.length+'문제 준비됨 — 내용은 밤에 열립니다' : '아직 없음'}</p>
-  </div>
-  <div class="card"><div class="jua" style="margin-bottom:4px">각자 몰래 3문제</div>
-    <p class="muted" style="margin-top:0">전시 보다가 눈에 띄는 걸로.</p>
-    <input id="cq" placeholder="문제">
+      ${S.aiQ.length? S.aiQ.length+'문제 준비됨 — 내용은 밤에':'아직 없음'}</p></div>
+  <div class="card"><div class="jua">각자 몰래 3문제</div>
+    <input id="cq" placeholder="문제" style="margin-top:10px">
     <input id="ca" placeholder="정답" style="margin-top:9px">
-    <button class="primary wide" style="margin-top:11px" data-run="addQ" data-a="${s.id}">추가</button>
-    <p class="muted" style="margin-bottom:0">내가 낸 문제 ${S.customQ.filter(q=>q.slot===s.id&&q.by===me).length} / 3</p>
-  </div>`;
+    <button class="green wide" style="margin-top:11px" data-run="addQ" data-a="${s.id}">추가</button>
+    <p class="muted center" style="margin-bottom:0">내가 낸 문제 ${S.customQ.filter(q=>q.slot===s.id&&q.by===me).length} / 3</p></div>`;
 }
 async function genQuiz(){
   const panels=photosOf('balhae');
@@ -632,31 +673,26 @@ async function genQuiz(){
     S.aiQ=shuffle(DUMMY_Q,CONFIG.TRIP_DATE).slice(0,3); save(); render();
     return toast('더미 문항 3개 (개발용)');
   }
-  toast('만드는 중… 20초쯤 걸립니다');
+  toast('만드는 중… 20초쯤');
   try{
-    const imgs=panels.slice(0,4).map(p=>p.url||p.local);
-    const out=await call('genQuiz',{ images:imgs, count:8, seed:CONFIG.TRIP_DATE });
-    S.aiQ=shuffle(out.questions,CONFIG.TRIP_DATE).slice(0,6);
-    save(); render(); toast(S.aiQ.length+'문제 준비 완료');
+    const out=await call('genQuiz',{ images:panels.slice(0,4).map(p=>p.url||p.local), count:8 });
+    S.aiQ=shuffle(out.questions,CONFIG.TRIP_DATE).slice(0,6); save(); render();
+    toast(S.aiQ.length+'문제 준비 완료');
   }catch(e){ toast('실패: '+e.message); }
 }
 
 /* ── 양조장 ──────────────────────────────────── */
-function vBrew(s){
-  return `<div class="card"><div class="jua" style="margin-bottom:4px">신메뉴 이름 짓기</div>
-    <p class="muted" style="margin-top:0">속초 지명으로 하나. 밤에 블라인드로 판정합니다.</p>
-    ${S.beers.names[me]
-      ? `<div class="shell ${S.beers.names.A&&S.beers.names.B?'open':''}"><div class="ridges"></div>
-         <div class="lid"><span>🍺 제출됨</span><small>${S.beers.names.A&&S.beers.names.B?'':'상대 기다리는 중'}</small></div>
-         <div class="stack">
-           <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(S.beers.names.A??'—')}</div></div>
-           <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(S.beers.names.B??'—')}</div></div>
-         </div></div>`
-      : `<div class="row"><input id="bn" placeholder="예) 청간정 세션 에일">
-         <button class="primary" style="flex:0 0 84px" data-run="beerName">제출</button></div>`}
+function vBrew(){
+  const n=S.beers.names;
+  return `<div class="card"><div class="jua">신메뉴 이름 짓기</div>
+    <p class="muted" style="margin-top:2px">속초 지명으로 하나. 밤에 AI가 블라인드로 심사합니다.</p>
+    ${n[me]
+      ? pocket({A:n.A,B:n.B},nameOf(other()))
+      : `<div class="row" style="margin-top:11px"><input id="bn" placeholder="예) 청간정 세션 에일">
+         <button class="primary" style="flex:0 0 82px" data-run="beerName">제출</button></div>`}
   </div>
   <div class="card tight"><p class="muted" style="margin:0">
-    이름표는 떼고 밤에 AI가 심사합니다. 누가 지었는지 모르는 채로 봐요.</p></div>`;
+    이름표를 떼고 순서도 섞어서 보냅니다. 누가 지었는지 모르는 채로 심사받아요.</p></div>`;
 }
 function beerName(){
   const v=document.getElementById('bn').value.trim();
@@ -664,30 +700,24 @@ function beerName(){
   S.beers.names[me]=v; save(); render();
 }
 
-/* ── 퀴즈쇼 — 한 문제씩 ──────────────────────── */
-/* 문제 한 줄로 세우기. 순서는 낮에 모은 순서 그대로. */
+/* ── 퀴즈: 한 문제씩 ─────────────────────────── */
 function queue(){
   const out=[];
-  S.customQ.forEach(q=>out.push({
-    id:q.id, kind:'free', text:q.q, truth:q.a, by:q.by, from:SLOT(q.slot).place }));
-  S.aiQ.forEach((q,i)=>out.push({
-    id:'ai'+i, kind:'choice', text:q.q, choices:q.choices, truth:q.answer, from:'발해역사관' }));
-  const pool=S.photos.filter(p=>['checkin','lunch','balhae','brew'].includes(p.slot));
+  S.customQ.forEach(q=>out.push({id:q.id,kind:'free',text:q.q,truth:q.a,by:q.by,from:SLOT(q.slot).place}));
+  S.aiQ.forEach((q,i)=>out.push({id:'ai'+i,kind:'choice',text:q.q,choices:q.choices,truth:q.answer,from:'발해역사관'}));
+  const pool=S.photos.filter(p=>['lunch','balhae','brew'].includes(p.slot));
   shuffle(pool,CONFIG.TRIP_DATE+'blur').slice(0,2).forEach((p,i)=>out.push({
-    id:'ph'+i, kind:'photo', text:'이 사진, 어디서 찍었게?', photo:p,
-    truth:SLOT(p.slot).place, from:'가려진 사진' }));
-  if(S.beers.names.A&&S.beers.names.B) out.push({ id:'beer', kind:'beer', from:'양조장' });
-  SEALS.forEach(x=>out.push({ id:'sl_'+x.id, kind:'seal', text:x.q, from:'아침 봉인' }));
+    id:'ph'+i,kind:'photo',text:'이 사진, 어디서 찍었게?',photo:p,truth:SLOT(p.slot).place,from:'가려진 사진'}));
+  if(S.beers.names.A&&S.beers.names.B) out.push({id:'beer',kind:'beer',from:'양조장'});
+  SEALS.forEach(x=>out.push({id:'sl_'+x.id,kind:'seal',text:x.q,from:'아침 봉인'}));
   return out;
 }
-/* 이 문제에 답해야 하는 사람 */
 function askers(q){
-  if(q.kind==='free'||q.kind==='photo') return q.by? [other2(q.by)] : ['A','B'];
+  if(q.kind==='free'||q.kind==='photo') return q.by?[other2(q.by)]:['A','B'];
   if(q.kind==='choice') return ['A','B'];
-  return [];                                    // 맥주·봉인은 답이 이미 있음
+  return [];
 }
-const other2 = k => k==='A'?'B':'A';
-const ansOf  = qid => S.show.ans[qid]||{};
+const ansOf = qid => S.show.ans[qid]||{};
 
 function vShow(){
   const Q=queue();
@@ -696,49 +726,40 @@ function vShow(){
   if(S.show.i>=Q.length) return vShowEnd(Q);
 
   const q=Q[S.show.i], need=askers(q), a=ansOf(q.id);
-  const allIn = need.every(k=>a[k]!=null);
-  const graded = S.show.graded[q.id];
+  const allIn=need.every(k=>a[k]!=null), graded=S.show.graded[q.id];
   let h=`<div class="card tight" style="display:flex;justify-content:space-between;align-items:center">
-    <span class="pill sand">${S.show.i+1} / ${Q.length}</span>
+    <span class="tag red">${S.show.i+1} / ${Q.length}</span>
     <span class="muted" style="font-size:12.5px">${esc(q.from)}</span></div>`;
 
-  /* ── 맥주 이름 심사 ── */
   if(q.kind==='beer'){
     const n=S.beers.names, v=S.beers.verdict;
     h+=`<div class="qbox"><div class="qt">어느 쪽이 더 그럴듯한 맥주 이름일까</div>
       <div class="stack">
         <div class="answer"><b>1번</b><div>${esc(n.A)}</div></div>
-        <div class="answer"><b>2번</b><div>${esc(n.B)}</div></div>
-      </div>`;
-    h+= v
-      ? `<div class="answer" style="margin-top:12px"><b>${esc(nameOf(v.order[v.winner]))} 승</b>
-         <div>${esc(v.why)}</div></div>`
-      : `<button class="coral wide" style="margin-top:14px" data-run="judgeNames">
-         ⚖️ AI 심사 받기 ${CONFIG.USE_DUMMY?'(더미)':''}</button>`;
-    h+=`</div>`;
-    return h + (v? nextBtn() : '');
+        <div class="answer"><b>2번</b><div>${esc(n.B)}</div></div></div>`;
+    h+= v ? `<div class="answer" style="margin-top:13px;border-style:solid;border-color:var(--green)">
+             <b>${esc(nameOf(v.order[v.winner]))} 승</b><div>${esc(v.why)}</div></div>`
+          : `<button class="green wide" style="margin-top:14px" data-run="judgeNames">
+             ⚖️ AI 심사 받기 ${CONFIG.USE_DUMMY?'(더미)':''}</button>`;
+    return h+`</div>`+(v?nextBtn():'');
   }
 
-  /* ── 봉인 개봉 ── */
   if(q.kind==='seal'){
     const rec=S.seals[q.id.slice(3)]||{};
     h+=`<div class="qbox"><div class="qt">${esc(q.text)}</div>
       <div class="stack">
         <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
-        <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div>
-      </div>
+        <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div></div>
       <label>실제로는?</label>
       <div class="row"><input id="tr" value="${esc(S.show.truth[q.id]??'')}" placeholder="결과 입력">
-      <button style="flex:0 0 72px" data-run="setTruth" data-a="${q.id}">확인</button></div>`;
-    if(S.show.truth[q.id]) h+=`<div class="answer" style="margin-top:12px"><b>정답</b>
-      <div>${esc(S.show.truth[q.id])}</div></div>`+gradeRow(q);
-    h+=`</div>`;
-    return h + (graded? nextBtn() : '');
+      <button style="flex:0 0 70px" data-run="setTruth" data-a="${q.id}">확인</button></div>`;
+    if(S.show.truth[q.id]) h+=`<div class="answer" style="margin-top:13px;border-style:solid;border-color:var(--green)">
+      <b>정답</b><div>${esc(S.show.truth[q.id])}</div></div>`+gradeRow(q);
+    return h+`</div>`+(graded?nextBtn():'');
   }
 
-  /* ── 나머지: 둘 다 입력 → 정답 확인 → 채점 ── */
   h+=`<div class="qbox">`;
-  if(q.photo) h+=`<div class="blurwrap" style="margin-bottom:14px">
+  if(q.photo) h+=`<div class="blurwrap" style="margin-bottom:15px">
     <img src="${src(q.photo)}" style="filter:blur(${allIn?0:22}px)" alt=""></div>`;
   h+=`<div class="qt">${esc(q.text)}</div>`;
 
@@ -749,52 +770,43 @@ function vShow(){
       h+=`<button class="choice ${cls}" ${allIn?'disabled':''}
            data-run="answer" data-a="${q.id}" data-b="${j}">${'①②③④'[j]||''} ${esc(c)}</button>`;
     });
-  } else if(need.includes(me) && a[me]==null){
+  } else if(need.includes(me)&&a[me]==null){
     h+=`<div class="row"><input id="ai_${q.id}" placeholder="내 답">
-        <button class="primary" style="flex:0 0 72px" data-run="answer" data-a="${q.id}">제출</button></div>`;
+        <button class="primary" style="flex:0 0 70px" data-run="answer" data-a="${q.id}">제출</button></div>`;
   }
 
   if(!allIn){
     const wait=need.filter(k=>a[k]==null);
     h+=`<p class="muted center" style="margin-bottom:0">
-      ${need.includes(me)&&a[me]==null? '답을 넣어주세요' : nameOf(wait[0])+' 기다리는 중'}</p>`;
+      ${need.includes(me)&&a[me]==null?'답을 넣어주세요':nameOf(wait[0])+' 기다리는 중'}</p>`;
   }else{
-    if(q.kind!=='choice'){
-      h+=`<div class="stack" style="margin-top:12px">
-        ${need.map(k=>`<div class="answer"><b>${esc(nameOf(k))}</b><div>${esc(a[k])}</div></div>`).join('')}
-        <div class="answer" style="background:var(--sea-2)"><b>정답</b><div>${esc(q.truth)}</div></div>
-      </div>`;
-    }
+    if(q.kind!=='choice') h+=`<div class="stack" style="margin-top:13px">
+      ${need.map(k=>`<div class="answer"><b>${esc(nameOf(k))}</b><div>${esc(a[k])}</div></div>`).join('')}
+      <div class="answer" style="border-style:solid;border-color:var(--green)"><b>정답</b><div>${esc(q.truth)}</div></div>
+    </div>`;
     h+=gradeRow(q);
   }
-  h+=`</div>`;
-  return h + (graded? nextBtn() : '');
+  return h+`</div>`+(graded?nextBtn():'');
 }
-
-/* 4지선다는 자동 채점되므로 결과만 보여줍니다 */
 function gradeRow(q){
   const g=S.show.graded[q.id];
-  if(g) return `<p class="center jua" style="font-size:17px;margin:14px 0 0">
+  if(g) return `<p class="center jua" style="font-size:17px;margin:15px 0 0">
     ${g==='none'?'둘 다 못 맞혔습니다':g==='both'?'둘 다 정답 🎉':esc(nameOf(g))+' 정답 +1'}</p>`;
   if(q.kind==='choice'){
     const a=ansOf(q.id);
-    const auto = a.A===q.truth && a.B===q.truth ? 'both'
-               : a.A===q.truth ? 'A' : a.B===q.truth ? 'B' : 'none';
+    const auto = a.A===q.truth&&a.B===q.truth?'both' : a.A===q.truth?'A' : a.B===q.truth?'B' : 'none';
     setTimeout(()=>grade(q.id,auto),0);
     return '';
   }
-  return `<p class="muted center" style="margin:14px 0 6px">누가 맞혔나요?</p>
+  return `<p class="muted center" style="margin:15px 0 7px">누가 맞혔나요?</p>
     <div class="row">
       <button class="primary" data-run="grade" data-a="${q.id}" data-b="A">${esc(nameOf('A'))}</button>
-      <button class="primary" data-run="grade" data-a="${q.id}" data-b="B">${esc(nameOf('B'))}</button>
-    </div>
+      <button class="primary" data-run="grade" data-a="${q.id}" data-b="B">${esc(nameOf('B'))}</button></div>
     <div class="row" style="margin-top:9px">
       <button data-run="grade" data-a="${q.id}" data-b="both">둘 다</button>
-      <button data-run="grade" data-a="${q.id}" data-b="none">아무도</button>
-    </div>`;
+      <button data-run="grade" data-a="${q.id}" data-b="none">아무도</button></div>`;
 }
-const nextBtn = () => `<button class="primary wide" data-run="nextQ">다음 문제 →</button>`;
-
+const nextBtn = () => `<button class="denim wide" data-run="nextQ">다음 문제 →</button>`;
 function answer(qid,choice){
   const v = choice!=null ? Number(choice) : document.getElementById('ai_'+qid).value.trim();
   if(v==='') return toast('답을 넣어주세요');
@@ -814,35 +826,32 @@ function setTruth(qid){
 }
 function nextQ(){ S.show.i++; save(); render(); }
 function prevQ(){ if(S.show.i>0){ S.show.i--; save(); render(); } }
-
 function vShowEnd(Q){
   const sc=S.show.scores;
-  return `<div class="card center">
-    <div class="jua" style="font-size:23px">${sc.A===sc.B?'무승부':esc(nameOf(sc.A>sc.B?'A':'B'))+' 우승 🏆'}</div>
-    <p class="muted">${Q.length}문제 · ${sc.A} 대 ${sc.B}</p>
-    <p class="muted">우승자가 내일 메뉴를 정합니다.</p>
-    <button class="wide" style="margin-top:8px" data-run="prevQ">마지막 문제 다시 보기</button>
-    <button class="wide" style="margin-top:9px" data-run="resetShow">처음부터 다시</button>
-  </div>`;
+  return `<div class="label center">
+    <div class="jua" style="font-size:22px">${sc.A===sc.B?'무승부':esc(nameOf(sc.A>sc.B?'A':'B'))+' 우승 🏆'}</div>
+    <p class="muted" style="margin:6px 0 0">${Q.length}문제 · ${sc.A} 대 ${sc.B}</p></div>
+  <div class="card center"><p class="muted" style="margin-top:0">우승자가 내일 메뉴를 정합니다.</p>
+    <button class="wide" data-run="prevQ">마지막 문제 다시 보기</button>
+    <button class="wide" style="margin-top:9px" data-run="resetShow">처음부터 다시</button></div>`;
 }
 function resetShow(){
   if(!confirm('점수와 답을 모두 지우고 처음부터 다시 할까요?')) return;
-  S.show={ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} };
+  S.show={i:0,scores:{A:0,B:0},ans:{},truth:{},graded:{}};
   S.beers.verdict=null; save(); render();
 }
 async function judgeNames(){
   const n=S.beers.names;
   const order=shuffle(['A','B'],CONFIG.TRIP_DATE+'judge');
-  const done=(v)=>{ S.beers.verdict=v; grade('beer',v.order[v.winner]); };
+  const done=v=>{ S.beers.verdict=v; grade('beer',v.order[v.winner]); };
   if(CONFIG.USE_DUMMY){
     done({order,winner:0,why:'더미 심사입니다. 실전에서는 AI가 이유를 씁니다.'});
     return toast('더미 판정 (개발용)');
   }
   toast('심사 중…');
   try{
-    const out=await call('judgeNames',{ names:[n[order[0]],n[order[1]]] });
-    done({order,winner:out.winner,why:out.why});
-    toast('판정이 나왔습니다');
+    const out=await call('judgeNames',{names:[n[order[0]],n[order[1]]]});
+    done({order,winner:out.winner,why:out.why}); toast('판정이 나왔습니다');
   }catch(e){ toast('실패: '+e.message); }
 }
 
@@ -850,13 +859,11 @@ async function judgeNames(){
 function vMission(s){
   const mine=photosOf(s.id,{by:me})[0], yours=photosOf(s.id,{by:other()})[0];
   const both=mine&&yours;
-  const intro={
-    theme:`주제 하나, 각자 5분, 한 장씩. 정답은 없습니다.`,
-    overlay:`상대 사진을 화면에 겹쳐 두고 맞춰서 찍습니다.`
-  }[s.mode];
-  let h=`<div class="card"><p class="muted" style="margin-top:0">${intro}</p>`;
-  if(s.theme) h+=`<div class="center" style="margin:14px 0">
-    <span class="pill coral" style="font-size:16px;padding:8px 20px;font-family:Jua">${esc(s.theme)}</span></div>`;
+  let h=`<div class="card"><p class="muted" style="margin-top:0">${
+    s.mode==='theme'?'주제 하나, 각자 5분, 한 장씩. 정답은 없습니다.'
+                    :'상대 사진을 화면에 겹쳐 두고 맞춰서 찍습니다.'}</p>`;
+  if(s.theme) h+=`<div class="center" style="margin:15px 0">
+    <span class="tag red" style="font-size:16px;padding:8px 20px">${esc(s.theme)}</span></div>`;
 
   if(s.mode==='overlay'){
     h+= yours
@@ -864,18 +871,19 @@ function vMission(s){
          <img class="ghostimg" src="${src(yours)}" style="opacity:${peek.op ?? 0.3}" alt="">
          <div class="grid"></div></div>
          <label>겹친 사진 진하기</label>
-         <input type="range" min="10" max="70" value="${(peek.op ?? 0.3)*100}" oninput="peek.op=this.value/100;document.querySelector('.ghostimg').style.opacity=peek.op">
+         <input type="range" min="10" max="70" value="${(peek.op ?? 0.3)*100}"
+           oninput="peek.op=this.value/100;document.querySelector('.ghostimg').style.opacity=peek.op">
          <button class="primary wide" style="margin-top:11px" data-run="snap" data-a="${s.id}">📸 지금 찍기</button>
          <button class="wide" style="margin-top:9px" data-run="capShot" data-a="${s.id}">앨범에서 고르기</button>`
       : `<p class="muted">${esc(nameOf(other()))}가 먼저 찍어야 겹칠 사진이 생깁니다.</p>
          <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 내가 먼저 찍기</button>`;
   }else{
-    h+=`<button class="primary wide" data-run="capShot" data-a="${s.id}">📷 내 사진 올리기</button>`;
+    h+=`<button class="primary wide" data-run="capShot" data-a="${s.id}">📷 내 사진 붙이기</button>`;
   }
-  h+=`<div class="shots" style="margin-top:16px">
+  h+=`<div class="shots" style="margin-top:17px">
     <div class="shot ${mine?'':'empty'}">${mine?`<img src="${src(mine)}" alt=""><span class="who">${esc(nameOf(me))}</span>`:'내 사진'}</div>
     <div class="shot ${both?'':'empty'}">${both?`<img src="${src(yours)}" alt=""><span class="who">${esc(nameOf(other()))}</span>`
-      : (yours? '🔒 내가 올리면 열림' : '상대 대기 중')}</div>
+      :(yours?'🧵 내가 올리면 열림':'상대 대기 중')}</div>
   </div></div>`;
   return h;
 }
@@ -904,46 +912,41 @@ function vFinale(){
   const picked=S.finale.best[me];
   const pool=shuffle(S.photos.slice(),CONFIG.TRIP_DATE+'order').slice(0,8);
   const sc=S.show.scores;
-  let h=`<div class="card"><div class="jua" style="margin-bottom:8px">최종 점수</div>
-    <div class="score" style="margin:0">
-      <div class="${sc.A>=sc.B?'lead':''}"><div class="n">${sc.A}</div><div class="nm">${esc(nameOf('A'))}</div></div>
-      <div class="${sc.B>=sc.A?'lead':''}"><div class="n">${sc.B}</div><div class="nm">${esc(nameOf('B'))}</div></div>
-    </div></div>`;
+  let h=`<div class="label center"><div class="jua" style="font-size:19px">
+    ${sc.A===sc.B?'무승부입니다':esc(nameOf(sc.A>sc.B?'A':'B'))+' 우승 🏆'}</div>
+    <p class="muted" style="margin:5px 0 0">${sc.A} 대 ${sc.B}</p></div>`;
 
-  h+=`<div class="card"><div class="jua" style="margin-bottom:4px">${esc(nameOf(other()))}의 사진 중 베스트</div>
-    <p class="muted" style="margin-top:0">한 장 고르고, 제목을 붙여주세요.</p>
+  h+=`<div class="card"><div class="jua">${esc(nameOf(other()))}의 사진 중 베스트</div>
+    <p class="muted" style="margin-top:2px">한 장 고르고, 제목을 붙여주세요.</p>
     <div class="shots">${yours.length? yours.map(p=>
-      `<div class="shot" style="${picked===p.id?'outline:4px solid var(--coral);outline-offset:-4px':''}">
+      `<div class="shot" style="${picked===p.id?'box-shadow:0 0 0 4px var(--red)':''}">
         <img src="${src(p)}" alt="" data-run="pickBest" data-a="${p.id}"></div>`).join('')
-      : `<div class="shot empty">상대 사진이 없습니다</div><div class="shot empty"></div>`}</div>`;
+      :`<div class="shot empty">상대 사진 없음</div><div class="shot empty">－</div>`}</div>`;
   if(picked) h+=`<label>제목 붙이기</label>
     <div class="row"><input id="ttl" value="${esc(S.finale.titles[picked]??'')}" placeholder="예) 파도보다 먼저 웃은 사람">
-    <button class="primary" style="flex:0 0 72px" data-run="setTitle">저장</button></div>`;
+    <button class="primary" style="flex:0 0 70px" data-run="setTitle">저장</button></div>`;
   h+=`</div>`;
 
-  h+=`<div class="card"><div class="jua" style="margin-bottom:4px">시간순 맞히기</div>
-    <p class="muted" style="margin-top:0">찍은 순서대로 눌러주세요. 촬영 시각은 앱이 알고 있습니다.</p>
-    <div class="shots">${pool.map((p,i)=>{
+  h+=`<div class="card"><div class="jua">시간순 맞히기</div>
+    <p class="muted" style="margin-top:2px">찍은 순서대로 눌러주세요.</p>
+    <div class="shots">${pool.map(p=>{
       const n=(peek.order||[]).indexOf(p.id);
-      return `<div class="shot" style="${n>=0?'outline:4px solid var(--sea);outline-offset:-4px':''}">
+      return `<div class="shot" style="${n>=0?'box-shadow:0 0 0 4px var(--green)':''}">
         <img src="${src(p)}" alt="" data-run="tapOrder" data-a="${p.id}">
         ${n>=0?`<span class="who">${n+1}</span>`:''}</div>`;}).join('')}</div>
-    <div class="row" style="margin-top:12px">
+    <div class="row" style="margin-top:13px">
       <button data-run="resetOrder">다시</button>
-      <button class="primary" data-run="gradeOrder">채점</button></div>
-    ${S.finale.orderScore!=null?`<p class="center jua" style="font-size:19px;margin-bottom:0">
-      ${pool.length}장 중 ${S.finale.orderScore}장 정확</p>`:''}
-  </div>`;
-
-  h+=`<div class="card center"><div class="jua" style="font-size:19px">
-    ${sc.A===sc.B?'무승부입니다':esc(nameOf(sc.A>sc.B?'A':'B'))+' 우승 🏆'}</div>
-    <p class="muted" style="margin-bottom:0">사진 ${S.photos.length}장 · 문제 ${S.customQ.length+S.aiQ.length}개 · 봉인 ${SEALS.length}건</p></div>`;
+      <button class="green" data-run="gradeOrder">채점</button></div>
+    ${S.finale.orderScore!=null?`<p class="center jua" style="font-size:18px;margin-bottom:0">
+      ${pool.length}장 중 ${S.finale.orderScore}장 정확</p>`:''}</div>
+  <div class="card center"><p class="muted" style="margin:0">
+    사진 ${S.photos.length}장 · 문제 ${S.customQ.length+S.aiQ.length}개 · 봉인 ${SEALS.length}건</p></div>`;
   return h;
 }
 function pickBest(id){ S.finale.best[me]=id; save(); render(); }
 function setTitle(){
-  const id=S.finale.best[me];
-  S.finale.titles[id]=document.getElementById('ttl').value.trim(); save(); toast('제목을 저장했습니다');
+  S.finale.titles[S.finale.best[me]]=document.getElementById('ttl').value.trim();
+  save(); toast('제목을 저장했습니다');
 }
 function tapOrder(id){
   peek.order=peek.order||[];
@@ -963,12 +966,12 @@ function gradeOrder(){
 /* ── 앨범 / 나 ───────────────────────────────── */
 function screenAlbum(){
   if(!S.photos.length) return `<div class="card center"><p class="muted" style="margin:0">
-    아직 한 장도 없습니다. 슬롯에서 찍어보세요.</p></div>`;
+    아직 한 장도 없습니다.</p></div>`;
   let h='';
   TRIP.forEach(s=>{
     const ps=photosOf(s.id); if(!ps.length) return;
-    h+=`<div class="card"><span class="pill sand">${s.day}일차 ${s.time}</span>
-      <div class="jua" style="margin:8px 0 12px">${s.mark} ${esc(s.place)}</div>
+    h+=`<div class="card"><span class="tag sand">${s.day}일차 ${s.time}</span>
+      <div class="jua" style="margin:8px 0 13px">${s.mark} ${esc(s.place)}</div>
       <div class="shots">${ps.map(p=>{
         const t=S.finale.titles[p.id];
         return `<div class="shot"><img src="${src(p)}" alt="">
@@ -977,23 +980,21 @@ function screenAlbum(){
   return h;
 }
 function screenMe(){
-  const n=S.photos.filter(p=>p.by===me).length;
   return `<div class="card">
     <div class="jua" style="font-size:19px">${esc(nameOf(me))}</div>
-    <p class="muted">내 사진 ${n}장 · 내가 낸 문제 ${S.customQ.filter(q=>q.by===me).length}개</p>
-    <p class="muted">${CONFIG.API_URL? (online?'서버 연결됨':'오프라인 — 임시 저장 중') : '서버 없음 — 이 기기에만 저장됩니다'}
+    <p class="muted">내 사진 ${S.photos.filter(p=>p.by===me).length}장 ·
+      내가 낸 문제 ${S.customQ.filter(q=>q.by===me).length}개</p>
+    <p class="muted">함께: ${esc(nameOf(other()))||'아직 없음'}</p>
+    <p class="muted">${CONFIG.API_URL?(online?'연결됨':'오프라인 — 임시 저장 중'):'서버 없음 — 이 기기에만'}
       ${CONFIG.USE_DUMMY?' · 더미 모드':''}</p>
-    <button class="wide" data-run="swapMe">다른 사람으로 바꾸기</button>
-    <button class="wide" style="margin-top:9px" data-run="reName">이름 고치기</button>
-    <button class="wide" style="margin-top:9px" data-run="wipe">전부 지우기</button>
-  </div>`;
+    <button class="wide" style="margin-top:8px" data-run="leave">나가기</button>
+    <button class="wide" style="margin-top:9px" data-run="wipe">전부 지우기</button></div>`;
 }
-function reName(){ S.names={A:'',B:''}; me=null; store.set('me',''); save(); render(); }
-function swapMe(){ me=other(); store.set('me',me); render(); }
-function wipe(){ if(confirm('사진과 점수까지 전부 지웁니다. 계속할까요?')){ S=blank(); save(); go('home'); } }
+function leave(){ S.names[me]=''; me=null; store.set('me',''); skipWait=false; save(); render(); }
+function wipe(){ if(confirm('사진과 점수까지 전부 지웁니다. 계속할까요?')){ S=blank(); me=null; store.set('me',''); save(); render(); } }
 
-/* 시작 */
 render(); pull();
+
 </script>
 </body>
 </html>
