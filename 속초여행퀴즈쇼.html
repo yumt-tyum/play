@@ -317,8 +317,8 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
    0. 설정
    ═══════════════════════════════════════════════ */
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbz2bPUmXTWt4BcwQzjNl5HuD-K5e8MYNSd4adNGTUYOXeTcx3lfz7M-ObKiLkMgI3Fo/exec',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
-  USE_DUMMY: null,        // null = 여행 날짜가 되면 알아서 실전. true/false 로 고정도 가능.
+  API_URL: '',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
+  USE_DUMMY: false,       // 실전. true 로 두면 테스트 문항만 나옵니다.
   TRIP_DATE: '2026-08-15',
   POLL_MS: 4000
 };
@@ -332,9 +332,6 @@ const TRIP = [
   { id:'checkin', day:1, time:'10:30', place:'소노캄 체크인', type:'capture', noPhoto:true,
     desc:'방 둘러보고 문제 하나', mark:'🔑',
     hint:'커튼 색, 슬리퍼 개수, 창밖에 보이는 것 — 상대가 놓쳤을 만한 걸로' },
-  { id:'lunch',   day:1, time:'11:30', place:'가보오토종닭',  type:'capture', noAsk:true,
-    desc:'사진만, 문제는 없습니다', mark:'🍗',
-    hint:'메뉴판이든 상 차림이든. 밤에 가려진 사진으로 나옵니다' },
   { id:'balhae',  day:1, time:'16:00', place:'발해역사관',    type:'ai',
     desc:'패널 찍으면 문제가 나옵니다', mark:'🏛' },
   { id:'brew',    day:1, time:'18:00', place:'크래프트루트',  type:'brew',
@@ -679,7 +676,7 @@ function boardHtml(k){
 function readiness(){
   const made=(slot,k)=>S.customQ.some(x=>x.slot===slot&&x.by===k);
   return [
-    { t:'아침 봉인',         each:k=>S.seals.s3&&S.seals.s3[k]!=null },
+    { t:'아침 봉인',         each:k=>SEALS.every(x=>S.seals[x.id]&&S.seals[x.id][k]!=null) },
     { t:'소노캄 문제',       each:k=>made('checkin',k) },
     { t:'발해 문제',         each:k=>made('balhae',k)  },
     { t:'맥주 이름',         each:k=>!!S.beers.names[k] },
