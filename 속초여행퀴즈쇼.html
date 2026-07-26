@@ -414,7 +414,7 @@ const store={
 const blank = () => ({
   names:{A:'',B:''}, seen:{}, colors:{A:null,B:null}, colorsV:2, seals:{}, aiUsed:[], warm:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
-  show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
+  show:{ i:0, ans:{}, truth:{}, graded:{}, reset:0 },
   finale:{ opened:false, best:{}, titles:{}, orderScore:null },
   rev:0
 });
@@ -428,7 +428,6 @@ function hydrate(raw){
     if(k in b) out[k]=Object.assign({},b[k],raw[k]||{});
   });
   out.beers.names  = Object.assign({}, (raw.beers&&raw.beers.names)||{});
-  out.show.scores  = Object.assign({A:0,B:0},(raw.show&&raw.show.scores)||{});
   ['ans','truth','graded'].forEach(k=>{ if(!out.show[k]||typeof out.show[k]!=='object') out.show[k]={}; });
   if(typeof out.show.i!=='number') out.show.i=0;
   ['best','titles'].forEach(k=>{ if(!out.finale[k]) out.finale[k]={}; });
@@ -507,7 +506,7 @@ async function push(){
     S.rev=Date.now();
     const body=동기화본();
     S.seen=body.seen;
-    await call('setState',{state:body});
+    await call('setState',{state:body, seat:me});
     dirty=false;
   }catch(e){ dirty=true; } finally{ pushing=false; }
 }
@@ -877,7 +876,7 @@ function draw(){
   const started=S.show.i>0||Object.keys(S.show.graded).length>0;
   const live=document.getElementById('live');
   if(started){
-    const sc=S.show.scores, tot=queue().length, at=Math.min(S.show.i,tot);
+    const sc=점수(), tot=queue().length, at=Math.min(S.show.i,tot);
     live.innerHTML=`
       <div class="p ${sc.A>sc.B?'lead':''}"><span class="nm">${esc(nameOf('A'))}</span><span class="n">${sc.A}</span></div>
       <span class="vs">${at}/${tot}</span>
@@ -1216,6 +1215,18 @@ function askers(q){
 }
 const ansOf = qid => S.show.ans[qid]||{};
 
+/* 점수는 따로 저장하지 않습니다. 채점 결과를 세면 되니까요.
+   두 폰이 각자 더하다 어긋날 일이 없어집니다. */
+function 점수(){
+  const sc={A:0,B:0};
+  Object.keys(S.show.graded||{}).forEach(k=>{
+    const g=S.show.graded[k];
+    if(g==='both'){ sc.A++; sc.B++; }
+    else if(g==='A'||g==='B') sc[g]++;
+  });
+  return sc;
+}
+
 function vShow(){
   if(!quizReady() && !peek.force){
     const rs=readiness(), done=rs.filter(r=>r.ok).length;
@@ -1357,15 +1368,8 @@ function answer(qid,choice){
   S.show.ans[qid]=S.show.ans[qid]||{}; S.show.ans[qid][me]=v; save(); render();
 }
 function grade(qid,who){
-  const 이전=S.show.graded[qid];
-  if(이전===who) return;
-  if(이전){                                   // 고칠 때는 먼저 되돌립니다
-    if(이전==='both'){ S.show.scores.A--; S.show.scores.B--; }
-    else if(이전==='A'||이전==='B') S.show.scores[이전]--;
-  }
-  S.show.graded[qid]=who;
-  if(who==='both'){ S.show.scores.A++; S.show.scores.B++; }
-  else if(who==='A'||who==='B') S.show.scores[who]++;
+  if(S.show.graded[qid]===who) return;
+  S.show.graded[qid]=who;      // 점수는 이걸 세어서 나옵니다
   peek.fix=null; save(); render();
 }
 function setTruth(qid){
@@ -1377,7 +1381,7 @@ function forceShow(){ if(confirm('아직 안 채운 게 있습니다. 그래도 
 function nextQ(){ peek.fix=null; S.show.i++; save(); render(); }
 function prevQ(){ if(S.show.i>0){ S.show.i--; save(); render(); } }
 function vShowEnd(Q){
-  const sc=S.show.scores;
+  const sc=점수();
   return `<div class="label center">
     <div class="jua" style="font-size:22px">${sc.A===sc.B?'무승부':esc(nameOf(sc.A>sc.B?'A':'B'))+' 우승 🏆'}</div>
     <p class="muted" style="margin:6px 0 0">${Q.length}문제 · ${sc.A} 대 ${sc.B}</p></div>
@@ -1387,7 +1391,7 @@ function vShowEnd(Q){
 }
 function resetShow(){
   if(!confirm('점수와 답을 모두 지우고 처음부터 다시 할까요?')) return;
-  S.show={i:0,scores:{A:0,B:0},ans:{},truth:{},graded:{}};
+  S.show={i:0,ans:{},truth:{},graded:{},reset:Date.now()};   // 서버도 이 신호를 보고 비웁니다
   S.beers.verdict=null; save(); render();
 }
 async function judgeNames(){
@@ -1488,7 +1492,7 @@ function warmEdit(id){
 
 /* ── 결산 ────────────────────────────────────── */
 function vFinale(){
-  const sc=S.show.scores;
+  const sc=점수();
 
   /* 아직 안 열었으면 봉투 하나만 */
   if(!S.finale.opened){
