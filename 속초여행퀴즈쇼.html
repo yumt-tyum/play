@@ -148,8 +148,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .slot.done{background:var(--green-2)}
 .day-head{display:flex;align-items:center;gap:10px;margin:26px 0 6px}
 .day-head h2{font-size:18px}
-.day-head .knit{flex:1;height:11px}
-.day-head .knit i{width:100%}
+.day-head .knit{flex:1;height:11px;min-width:52px}
 
 /* ── 조각보 주머니 (봉인) ───────────────────── */
 .pocket{position:relative;border-radius:15px;padding:16px;overflow:hidden;
@@ -188,14 +187,32 @@ label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .blurwrap img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;
   border-radius:3px;transition:filter .7s}
 
-/* 오버레이 촬영 */
-.cam{position:relative;border-radius:8px;overflow:hidden;background:#2E2620;
-  aspect-ratio:3/4;box-shadow:0 3px 0 rgba(74,59,50,.16), 0 9px 18px rgba(74,59,50,.14)}
-.cam video{width:100%;height:100%;object-fit:cover;display:block}
-.cam .ghostimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
-.cam .grid{position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(to right,transparent 33%,rgba(255,255,255,.3) 33% 33.4%,transparent 33.4% 66.6%,rgba(255,255,255,.3) 66.6% 67%,transparent 67%),
-             linear-gradient(to bottom,transparent 33%,rgba(255,255,255,.3) 33% 33.4%,transparent 33.4% 66.6%,rgba(255,255,255,.3) 66.6% 67%,transparent 67%)}
+/* ── 색 모으기 판 ───────────────────────────── */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+  background:#FFFDF6;padding:9px;border-radius:8px;
+  box-shadow:0 3px 0 rgba(74,59,50,.14), 0 8px 16px rgba(74,59,50,.12)}
+.cell{aspect-ratio:1;border-radius:4px;overflow:hidden;background:var(--paper-2);
+  border:2px dashed var(--stitch);display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--muted);position:relative}
+.cell img{width:100%;height:100%;object-fit:cover;display:block}
+.cell.mid{border:3px solid var(--red)}
+.cell .pct{position:absolute;right:3px;bottom:3px;background:rgba(255,253,246,.92);
+  border-radius:99px;padding:0 6px;font-size:10px;font-family:'Jua'}
+.swatch{display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:-4px;
+  box-shadow:0 0 0 3px #FFFDF6, 0 0 0 5px rgba(74,59,50,.18)}
+.chip{display:flex;align-items:center;gap:10px;background:var(--paper-2);
+  border-radius:13px;padding:11px 15px;margin:13px 0}
+.chip .big{font-family:'Jua';font-size:17px}
+
+/* ── 자르기 창 ──────────────────────────────── */
+#cropper{position:fixed;inset:0;background:rgba(46,38,32,.92);z-index:80;
+  display:none;align-items:center;justify-content:center;padding:18px}
+#cropper.on{display:flex}
+#cropper .box{background:var(--paper);border-radius:20px;padding:18px;max-width:370px;width:100%}
+#cropper canvas{width:100%;aspect-ratio:1;border-radius:8px;background:#2E2620;
+  touch-action:none;display:block;cursor:grab}
+#cropper .hint{font-size:12.5px;color:var(--muted);text-align:center;margin:11px 0 4px}
+
 input[type=range]{border:0;padding:0;background:transparent;accent-color:var(--red)}
 
 /* ── 문제 카드 ──────────────────────────────── */
@@ -263,7 +280,7 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">2일 · 10개 조각 · 둘</div>
+    <div class="eyebrow" id="eyebrow">2일 · 둘</div>
     <div><span class="cut">속초</span><span class="cut">2일,</span><span class="cut">우리 둘</span></div>
     <div class="knit" style="margin-top:10px"><i id="tide" style="width:0%"></i></div>
     <div class="tide-label"><span id="tideL">아직 출발 전</span><span id="tideR">0 / 10</span></div>
@@ -275,11 +292,23 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
   <div class="live" id="live"></div>
   <nav>
     <button onclick="go('home')">일정</button>
-    <button onclick="go('slot','show')">퀴즈</button>
-    <button onclick="go('album')">앨범</button>
+    <button onclick="go('album')">판·앨범</button>
     <button onclick="go('me')">나</button>
   </nav>
 </div></div>
+
+<div id="cropper">
+  <div class="box">
+    <canvas id="cropcv"></canvas>
+    <div class="hint">끌어서 옮기고, 아래로 크기를 맞추세요</div>
+    <input type="range" id="zoom" min="100" max="220" value="100"
+           oninput="zoomCrop(+this.value)">
+    <div class="row" style="margin-top:13px">
+      <button onclick="closeCrop()">취소</button>
+      <button class="primary" onclick="doneCrop()">이 부분으로</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
@@ -289,7 +318,7 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
    ═══════════════════════════════════════════════ */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbz2bPUmXTWt4BcwQzjNl5HuD-K5e8MYNSd4adNGTUYOXeTcx3lfz7M-ObKiLkMgI3Fo/exec',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
-  USE_DUMMY: true,        // 개발 중 true. 출발 아침에 false 로.
+  USE_DUMMY: null,        // null = 여행 날짜가 되면 알아서 실전. true/false 로 고정도 가능.
   TRIP_DATE: '2026-08-15',
   POLL_MS: 4000
 };
@@ -303,28 +332,57 @@ const TRIP = [
   { id:'checkin', day:1, time:'10:30', place:'소노캄 체크인', type:'capture', noPhoto:true,
     desc:'방 둘러보고 문제 하나', mark:'🔑',
     hint:'커튼 색, 슬리퍼 개수, 창밖에 보이는 것 — 상대가 놓쳤을 만한 걸로' },
-  { id:'lunch',   day:1, time:'11:30', place:'가보오토종닭',  type:'capture',
-    desc:'메뉴판 한 장, 문제 하나', mark:'🍗',
-    hint:'상대가 뭘 남겼는지, 반찬이 몇 가지였는지 — 지금 봐두세요' },
+  { id:'lunch',   day:1, time:'11:30', place:'가보오토종닭',  type:'capture', noAsk:true,
+    desc:'사진만, 문제는 없습니다', mark:'🍗',
+    hint:'메뉴판이든 상 차림이든. 밤에 가려진 사진으로 나옵니다' },
   { id:'balhae',  day:1, time:'16:00', place:'발해역사관',    type:'ai',
     desc:'패널 찍으면 문제가 나옵니다', mark:'🏛' },
   { id:'brew',    day:1, time:'18:00', place:'크래프트루트',  type:'brew',
     desc:'신메뉴 이름 짓기', mark:'🍺' },
   { id:'show',    day:1, time:'19:30', place:'숙소 퀴즈',     type:'show',
     desc:'오늘 모은 걸 한 문제씩', mark:'🏆' },
-  { id:'m2', day:2, time:'12:00', place:'바다정원', type:'mission', mode:'theme', theme:'따뜻한 것',
-    desc:'같은 주제 「따뜻한 것」', mark:'☕' },
-  { id:'m3', day:2, time:'14:00', place:'바다',     type:'mission', mode:'theme', theme:'이 여행을 한 단어로',
-    desc:'같은 주제 「이 여행을 한 단어로」', mark:'🌊' },
-  { id:'m4', day:2, time:'15:00', place:'모녀가리비', type:'mission', mode:'overlay',
-    desc:'같은 구도 · 상대 사진 겹쳐 찍기', mark:'🐚' },
-  { id:'end', day:2, time:'16:30', place:'귀가길',   type:'finale',
-    desc:'시상식', mark:'🎬' }
+  { id:'color', day:2, time:'11:00~', place:'색 모으기', type:'color',
+    desc:'여덟 칸 + 가운데 한 장 · 아무 때나', mark:'🎨' },
+  { id:'warm',  day:2, time:'13:00', place:'바다정원 카페', type:'warm',
+    desc:'따뜻한 질문 다섯 · 귀가길에 함께 열립니다', mark:'💌' },
+  { id:'end',   day:2, time:'16:30', place:'귀가길', type:'finale',
+    desc:'판과 답을 같이 펼칩니다', mark:'🎬' }
 ];
 const SLOT = id => TRIP.find(s=>s.id===id);
+const placeOf = id => (SLOT(id)||{}).place || '지난 기록';
+
+/* 오늘이 여행 날짜 전이면 더미, 당일부터는 실전 */
+function isDummy(){
+  if(CONFIG.USE_DUMMY!=null) return CONFIG.USE_DUMMY;
+  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
+  return today < CONFIG.TRIP_DATE;
+}
+
+/* 색 모으기 — 여행 날짜로 정해지므로 둘이 다른 색을 받습니다 */
+const PALETTE=[
+  { id:'red',    name:'빨강', hex:'#C94A42', h:4   },
+  { id:'orange', name:'주황', hex:'#E08A3C', h:30  },
+  { id:'yellow', name:'노랑', hex:'#E0C13A', h:48  },
+  { id:'green',  name:'초록', hex:'#6B9A52', h:95  },
+  { id:'teal',   name:'청록', hex:'#4FA39A', h:174 },
+  { id:'blue',   name:'파랑', hex:'#4A7BB0', h:210 },
+  { id:'purple', name:'보라', hex:'#8878B0', h:260 },
+  { id:'pink',   name:'분홍', hex:'#E4989E', h:345 }
+];
+const CELLS = 8;   // 가운데를 뺀 여덟 칸
+
+/* 2일차 · 맞히는 게 아니라 건네는 질문. 귀가길까지 잠겨 있습니다. */
+const WARM=[
+  { id:'w1', q:'이번 여행을 다섯 글자로 표현하자면?' },
+  { id:'w2', q:"이번 여행에서 우리가 한 일 중 '제일 잘했다!' 싶은 최고의 선택은?" },
+  { id:'w3', q:'이번 여행을 하면서 상대방에 대해 새롭게 알게 되었거나 다르게 보인 점은?' },
+  { id:'w4', q:'표현이 서툴거나 타이밍을 놓쳐서 차마 다 전하지 못했던, 마음에 담아둔 고마움(또는 미안함)은?' },
+  { id:'w5', q:'우리가 함께할 앞으로의 시간 동안, 상대방과 꼭 함께해 보고 싶은 버킷리스트 한 가지는?' }
+];
 
 const SEALS = [
-  { id:'s3', q:'오늘 상대가 제일 많이 할 말은?', unit:'' }
+  { id:'s1', q:'오늘 하루 우리가 총 걸은 걸음 수는?', unit:'걸음', num:true,
+    tip:'밤에 각자 건강 앱을 열어 합산합니다. 가장 가까운 사람이 이겨요.' }
 ];
 
 /* ═══════════════════════════════════════════════
@@ -336,14 +394,32 @@ const store={
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); }catch(e){} }
 };
 const blank = () => ({
-  names:{A:'',B:''}, seals:{}, photos:[], customQ:[], aiQ:[],
+  names:{A:'',B:''}, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
   show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
-  finale:{ best:{}, titles:{}, orderScore:null },
+  finale:{ opened:false, best:{}, titles:{}, orderScore:null },
   rev:0
 });
+/* 예전 버전으로 저장된 기록을 새 구조에 맞춰 채웁니다.
+   얕게 합치면 안쪽 객체가 통째로 옛것으로 덮여서 키가 사라집니다. */
+function hydrate(raw){
+  const b=blank();
+  if(!raw||typeof raw!=='object') return b;
+  const out=Object.assign(b,raw);
+  ['names','seals','warm','beers','show','finale','guesses'].forEach(k=>{
+    if(k in b) out[k]=Object.assign({},b[k],raw[k]||{});
+  });
+  out.beers.names  = Object.assign({}, (raw.beers&&raw.beers.names)||{});
+  out.show.scores  = Object.assign({A:0,B:0},(raw.show&&raw.show.scores)||{});
+  ['ans','truth','graded'].forEach(k=>{ if(!out.show[k]||typeof out.show[k]!=='object') out.show[k]={}; });
+  if(typeof out.show.i!=='number') out.show.i=0;
+  ['best','titles'].forEach(k=>{ if(!out.finale[k]) out.finale[k]={}; });
+  ['photos','customQ','aiQ'].forEach(k=>{ if(!Array.isArray(out[k])) out[k]=[]; });
+  return out;
+}
+
 let S=blank(), me=store.get('me')||null, skipWait=false;
-try{ const raw=store.get('state'); if(raw) S=Object.assign(blank(),JSON.parse(raw)); }catch(e){}
+try{ const raw=store.get('state'); if(raw) S=hydrate(JSON.parse(raw)); }catch(e){}
 function save(){ store.set('state',JSON.stringify(S)); push(); }
 
 /* ═══════════════════════════════════════════════
@@ -376,7 +452,7 @@ async function pull(){
   try{
     const r=await call('getState',{});
     if(r && r.rev>(S.rev||0)){
-      S=Object.assign(blank(),r);
+      S=hydrate(r);
       store.set('state',JSON.stringify(S));
       render();
     }
@@ -413,7 +489,9 @@ async function addPhoto(dataUrl,meta){
   const p=Object.assign({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),
     by:me, ts:Date.now(), local:dataUrl, url:null}, meta);
   S.photos.push(p); save(); render();
-  try{ const up=await call('upload',{id:p.id,dataUrl,slot:p.slot}); p.url=up.url; delete p.local; save(); }
+  try{ const up=await call('upload',{id:p.id,dataUrl,slot:p.slot,
+        place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(me)});
+    p.url=up.url; delete p.local; save(); }
   catch(e){}
   return p;
 }
@@ -430,6 +508,112 @@ async function pick(meta,cb){
     catch(e){ toast(e.message); }
   };
   i.click();
+}
+
+/* ── 정사각형으로 잘라서 올리기 ─────────────── */
+let cropState=null;
+function openCrop(file, cb){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const box=document.getElementById('cropper');
+      const cv=document.getElementById('cropcv');
+      const V=cv.width=cv.height=340;
+      const min=Math.max(V/img.width, V/img.height);
+      cropState={img,V,min,scale:min,ox:0,oy:0,cb};
+      centerCrop(); box.classList.add('on');
+      document.getElementById('zoom').value=100;
+      drawCrop();
+    };
+    img.onerror=()=>toast('이미지를 열지 못했습니다');
+    img.src=fr.result;
+  };
+  fr.onerror=()=>toast('파일을 읽지 못했습니다');
+  fr.readAsDataURL(file);
+}
+function centerCrop(){
+  const c=cropState;
+  c.ox=(c.V-c.img.width*c.scale)/2;
+  c.oy=(c.V-c.img.height*c.scale)/2;
+}
+function clampCrop(){
+  const c=cropState, w=c.img.width*c.scale, h=c.img.height*c.scale;
+  c.ox=Math.min(0,Math.max(c.V-w,c.ox));
+  c.oy=Math.min(0,Math.max(c.V-h,c.oy));
+}
+function drawCrop(){
+  const c=cropState; if(!c) return;
+  const ctx=document.getElementById('cropcv').getContext('2d');
+  clampCrop();
+  ctx.fillStyle='#2E2620'; ctx.fillRect(0,0,c.V,c.V);
+  ctx.drawImage(c.img,c.ox,c.oy,c.img.width*c.scale,c.img.height*c.scale);
+}
+function zoomCrop(v){
+  const c=cropState; if(!c) return;
+  const k=c.scale, mid=c.V/2;
+  c.scale=c.min*(1+ (v-100)/100*2);          // 100 → 원래 크기, 200 → 3배
+  const r=c.scale/k;
+  c.ox=mid-(mid-c.ox)*r; c.oy=mid-(mid-c.oy)*r;
+  drawCrop();
+}
+function closeCrop(){ cropState=null; document.getElementById('cropper').classList.remove('on'); }
+function doneCrop(){
+  const c=cropState; if(!c) return;
+  const OUT=900, k=OUT/c.V;
+  const out=document.createElement('canvas'); out.width=out.height=OUT;
+  const ctx=out.getContext('2d');
+  ctx.fillStyle='#FFFDF6'; ctx.fillRect(0,0,OUT,OUT);
+  ctx.drawImage(c.img,c.ox*k,c.oy*k,c.img.width*c.scale*k,c.img.height*c.scale*k);
+  const url=out.toDataURL('image/jpeg',.82);
+  const cb=c.cb; closeCrop(); cb(url);
+}
+function pickSquare(meta){
+  const i=document.createElement('input');
+  i.type='file'; i.accept='image/*'; i.capture='environment';
+  i.onchange=()=>{ if(i.files[0]) openCrop(i.files[0], async url=>{
+    toast('색을 재는 중…');
+    const pct=await colorPct(url, myColor(me));
+    await addPhoto(url, Object.assign({pct}, meta));
+    toast(pct>=12? '좋아요, '+myColor(me).name+' '+pct+'%' : myColor(me).name+'이 '+pct+'% 뿐이에요');
+  }); };
+  i.click();
+}
+
+/* ── 이 사진에 그 색이 얼마나 있나 ──────────── */
+function rgb2hsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn, l=(mx+mn)/2;
+  if(!d) return [0,0,l];
+  const s=d/(1-Math.abs(2*l-1));
+  let h;
+  if(mx===r)      h=60*(((g-b)/d)%6);
+  else if(mx===g) h=60*((b-r)/d+2);
+  else            h=60*((r-g)/d+4);
+  return [(h+360)%360, s, l];
+}
+function colorPct(dataUrl, color){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onerror=()=>res(0);
+    img.onload=()=>{
+      const N=72, c=document.createElement('canvas');
+      c.width=c.height=N;
+      const ctx=c.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(img,0,0,N,N);
+      let d;
+      try{ d=ctx.getImageData(0,0,N,N).data; }catch(e){ return res(0); }
+      let hit=0;
+      for(let i=0;i<d.length;i+=4){
+        const [h,sa,l]=rgb2hsl(d[i],d[i+1],d[i+2]);
+        if(sa<.20 || l<.12 || l>.93) continue;      // 무채색·너무 어둡거나 밝은 건 제외
+        let dh=Math.abs(h-color.h); if(dh>180) dh=360-dh;
+        if(dh<26) hit++;
+      }
+      res(Math.round(hit/(N*N)*100));
+    };
+    img.src=dataUrl;
+  });
 }
 
 /* ═══════════════════════════════════════════════
@@ -466,21 +650,77 @@ const other2 = k => k==='A'?'B':'A';
 const nameOf = k => S.names[k] || (k==='A'?'왼쪽':'오른쪽');
 const bothIn = () => !!(S.names.A && S.names.B);
 
+/* 여행 날짜로 색을 나눕니다. 둘이 겹치지 않아요. */
+function myColor(k){
+  const sh=shuffle(PALETTE, CONFIG.TRIP_DATE+'color');
+  return k==='A'? sh[0] : sh[1];
+}
+const colorShots = k => S.photos.filter(p=>p.mission==='color' && p.by===k);
+const midShot    = k => S.photos.find(p=>p.mission==='mid' && p.by===k);
+
+/* 3×3 판. 가운데는 내가 찍은 상대 인물 사진. */
+function boardHtml(k){
+  const cs=colorShots(k), mid=midShot(k), col=myColor(k);
+  let cells=[];
+  for(let i=0;i<9;i++){
+    if(i===4){
+      cells.push(`<div class="cell mid">${mid?`<img src="${src(mid)}" alt="">`:'가운데<br>인물'}</div>`);
+    }else{
+      const n=i<4?i:i-1, p=cs[n];
+      cells.push(`<div class="cell">${p
+        ? `<img src="${src(p)}" alt="">${p.pct!=null?`<span class="pct">${p.pct}%</span>`:''}`
+        : (n+1)}</div>`);
+    }
+  }
+  return `<div class="board">${cells.join('')}</div>`;
+}
+
+/* 퀴즈를 열려면 이만큼은 채워져 있어야 합니다 */
+function readiness(){
+  const made=(slot,k)=>S.customQ.some(x=>x.slot===slot&&x.by===k);
+  return [
+    { t:'아침 봉인',         each:k=>S.seals.s3&&S.seals.s3[k]!=null },
+    { t:'소노캄 문제',       each:k=>made('checkin',k) },
+    { t:'발해 문제',         each:k=>made('balhae',k)  },
+    { t:'맥주 이름',         each:k=>!!S.beers.names[k] },
+    { t:'발해 문항 만들기',  both:()=>S.aiQ.length>0    }
+  ].map(r=>Object.assign(r,{
+    ok:   r.both? r.both() : (r.each('A')&&r.each('B')),
+    미비: r.both? [] : ['A','B'].filter(k=>!r.each(k))
+  }));
+}
+const quizReady = () => readiness().every(r=>r.ok);
+
 function isDone(s){
   switch(s.type){
     case 'seal':    return SEALS.every(x=>S.seals[x.id]&&S.seals[x.id][me]!=null);
-    case 'capture': return s.noPhoto ? S.customQ.some(q=>q.slot===s.id&&q.by===me)
-                                     : photosOf(s.id,{by:me}).length>0;
+    case 'capture': return s.noAsk ? photosOf(s.id,{by:me}).length>0
+                                   : S.customQ.some(q=>q.slot===s.id&&q.by===me);
     case 'ai':      return S.aiQ.length>0;
     case 'brew':    return !!S.beers.names[me];
     case 'show':    return queue().length>0 && S.show.i>=queue().length;
-    case 'mission': return photosOf(s.id,{by:me}).length>0;
-    case 'finale':  return !!S.finale.best[me];
+    case 'color':   return colorShots(me).length>=CELLS && !!midShot(me);
+    case 'warm':    return WARM.every(w=>S.warm[w.id]&&S.warm[w.id][me]!=null);
+    case 'finale':  return !!S.finale.opened;
   }
   return false;
 }
 
-function render(){
+function render(){ try{ draw(); }catch(e){ crashed(e); } }
+function crashed(e){
+  console.error(e);
+  document.querySelector('.bottom').style.display='none';
+  document.getElementById('app').innerHTML=`
+    <div class="label"><h2>화면을 그리지 못했습니다</h2>
+      <p class="muted" style="margin:6px 0 0">저장된 기록이 지금 버전과 안 맞는 것 같아요.</p></div>
+    <div class="card">
+      <p class="muted" style="margin-top:0">기록을 지우고 다시 시작하면 해결됩니다.
+        서버를 쓰고 계시면 상대 기기의 기록은 그대로예요.</p>
+      <button class="primary wide" onclick="wipe()">기록 지우고 다시 시작</button>
+      <p class="muted" style="margin:14px 0 0;font-size:12px;word-break:break-all">${esc(String(e&&e.message||e))}</p>
+    </div>`;
+}
+function draw(){
   const el=document.getElementById('app');
   const bar=document.querySelector('.bottom');
   if(!me || !S.names[me]){ bar.style.display='none'; return screenJoin(); }
@@ -490,20 +730,29 @@ function render(){
   const n=TRIP.filter(isDone).length;
   document.getElementById('tide').style.width=(n/TRIP.length*100)+'%';
   document.getElementById('tideR').textContent=n+' / '+TRIP.length;
+  document.getElementById('eyebrow').textContent='2일 · '+TRIP.length+'개 조각 · 둘';
   document.getElementById('tideL').textContent =
     n===0?'아직 출발 전' : n===TRIP.length?'다 채웠습니다' : TRIP.filter(s=>!isDone(s))[0].place+' 차례';
 
-  const sc=S.show.scores, tot=queue().length, at=Math.min(S.show.i,tot);
-  document.getElementById('live').innerHTML=`
-    <div class="p ${sc.A>sc.B?'lead':''}"><span class="nm">${esc(nameOf('A'))}</span><span class="n">${sc.A}</span></div>
-    <span class="vs">${tot? at+'/'+tot : 'vs'}</span>
-    <div class="p ${sc.B>sc.A?'lead':''}"><span class="n">${sc.B}</span><span class="nm">${esc(nameOf('B'))}</span></div>`;
+  const started=S.show.i>0||Object.keys(S.show.graded).length>0;
+  const live=document.getElementById('live');
+  if(started){
+    const sc=S.show.scores, tot=queue().length, at=Math.min(S.show.i,tot);
+    live.innerHTML=`
+      <div class="p ${sc.A>sc.B?'lead':''}"><span class="nm">${esc(nameOf('A'))}</span><span class="n">${sc.A}</span></div>
+      <span class="vs">${at}/${tot}</span>
+      <div class="p ${sc.B>sc.A?'lead':''}"><span class="n">${sc.B}</span><span class="nm">${esc(nameOf('B'))}</span></div>`;
+  }else{
+    const rs=readiness(), done=rs.filter(r=>r.ok).length;
+    live.innerHTML=`<div class="p" style="justify-content:center;gap:11px">
+      <span class="nm">${done===rs.length?'퀴즈 준비 끝 — 일정에서 열어주세요':'퀴즈 준비'}</span>
+      <span class="n">${done}/${rs.length}</span></div>`;
+  }
 
   const fn={home:screenHome,slot:screenSlot,album:screenAlbum,me:screenMe}[view.name]||screenHome;
   el.innerHTML=fn();
   el.querySelectorAll('[data-run]').forEach(x=>
     x.addEventListener('click',()=>window[x.dataset.run](x.dataset.a,x.dataset.b)));
-  if(view.name==='slot'&&SLOT(view.arg)?.mode==='overlay') setTimeout(startCam,60);
 }
 
 /* ── 접속: 이름 치고 들어오기 ────────────────── */
@@ -530,7 +779,7 @@ async function join(name){
     toast('들어가는 중…');
     try{
       const r=await call('join',{name});
-      S=Object.assign(blank(),r.state); me=r.seat;
+      S=hydrate(r.state); me=r.seat;
     }catch(e){ return toast(e.message); }
   }else{
     const n=S.names;
@@ -565,9 +814,13 @@ function screenWait(){
 function screenHome(){
   let h='';
   [1,2].forEach(d=>{
-    h+=`<div class="day-head"><h2>${d}일차</h2><div class="knit"><i></i></div>
-        <span class="tag ${d===1?'red':'sky'}">${d===1?'퀴즈':'추억'}</span></div>`;
-    TRIP.filter(s=>s.day===d).forEach(s=>{
+    const slots=TRIP.filter(s=>s.day===d);
+    const done=slots.filter(isDone).length;
+    const pct=Math.round(done/slots.length*100);
+    h+=`<div class="day-head"><h2>${d}일차</h2>
+        <div class="knit"><i style="width:${pct}%"></i></div>
+        <span class="tag ${d===1?'red':'sky'}">${d===1?'모으기':'남기기'} ${done}/${slots.length}</span></div>`;
+    slots.forEach(s=>{
       const done=isDone(s);
       h+=`<button class="slot ${done?'done':''}" data-run="go" data-a="slot" data-b="${s.id}">
         <span class="t">${s.time}</span>
@@ -585,7 +838,7 @@ function screenSlot(){
     <h2 style="margin:8px 0 2px">${s.mark} ${esc(s.place)}</h2>
     <p class="muted" style="margin:0">${esc(s.desc)}</p></div>`;
   return head+{ seal:vSeal, capture:vCapture, ai:vAI, brew:vBrew,
-                show:vShow, mission:vMission, finale:vFinale }[s.type](s);
+                show:vShow, color:vColor, warm:vWarm, finale:vFinale }[s.type](s);
 }
 
 /* ── 봉인 ────────────────────────────────────── */
@@ -602,7 +855,8 @@ function vSeal(){
   let h=`<p class="muted">둘 다 넣어야 열립니다. 개봉은 밤 퀴즈 마지막에.</p>`;
   SEALS.forEach(x=>{
     const rec=S.seals[x.id]||{};
-    h+=`<div class="card"><div class="jua" style="font-size:16.5px;margin-bottom:11px">${esc(x.q)}</div>`;
+    h+=`<div class="card"><div class="jua" style="font-size:16.5px;margin-bottom:4px">${esc(x.q)}</div>
+      ${x.tip?`<p class="muted" style="margin:0 0 11px">${esc(x.tip)}</p>`:'<div style="height:7px"></div>'}`;
     h+= rec[me]==null
       ? `<div class="row"><input id="i_${x.id}" placeholder="내 예측${x.unit?' ('+x.unit+')':''}">
          <button class="primary" style="flex:0 0 82px" data-run="sealIn" data-a="${x.id}">봉인</button></div>`
@@ -630,6 +884,7 @@ function vCapture(s){
           || `<div class="shot empty">아직 없음</div><div class="shot empty">＋</div>`}
       </div></div>`;
   }
+  if(s.noAsk) return h;
   h+=`<div class="card"><div class="jua">상대에게 낼 문제</div>
     <p class="muted" style="margin-top:2px">${esc(s.hint&&s.noPhoto? s.hint : '상대가 밤에 풉니다.')}</p>
     <input id="cq" placeholder="예) 방 슬리퍼 몇 켤레였게?" style="margin-top:10px">
@@ -657,7 +912,7 @@ function vAI(s){
         || `<div class="shot empty">패널 사진 없음</div><div class="shot empty">＋</div>`}
     </div>
     <button class="green wide" style="margin-top:15px" ${panels.length?'':'disabled'} data-run="genQuiz">
-      ✂️ 문제 만들기 ${CONFIG.USE_DUMMY?'(더미)':''}</button>
+      ✂️ 문제 만들기 ${isDummy()?'(더미)':''}</button>
     <p class="muted center" style="margin-bottom:0">
       ${S.aiQ.length? S.aiQ.length+'문제 준비됨 — 내용은 밤에':'아직 없음'}</p></div>
   <div class="card"><div class="jua">각자 몰래 3문제</div>
@@ -669,7 +924,7 @@ function vAI(s){
 async function genQuiz(){
   const panels=photosOf('balhae');
   if(!panels.length) return toast('패널 사진이 먼저입니다');
-  if(CONFIG.USE_DUMMY){
+  if(isDummy()){
     S.aiQ=shuffle(DUMMY_Q,CONFIG.TRIP_DATE).slice(0,3); save(); render();
     return toast('더미 문항 3개 (개발용)');
   }
@@ -700,16 +955,75 @@ function beerName(){
   S.beers.names[me]=v; save(); render();
 }
 
+/* ── 답 맞춰보기 ─────────────────────────────
+   띄어쓰기·문장부호·대소문자는 무시하고, 조금 달라도 인정합니다.
+   숫자로 답하는 문제는 가장 가까운 사람이 이깁니다.
+   ───────────────────────────────────────────── */
+function norm(v){
+  return String(v??'').normalize('NFC').toLowerCase()
+    .replace(/[\s\u200b\u00a0]/g,'')
+    .replace(/[.,!?~·・…"'\u2018\u2019\u201c\u201d()\[\]{}\-_/\\]/g,'');
+}
+function lev(a,b){
+  if(a===b) return 0;
+  const m=a.length, n=b.length;
+  if(!m||!n) return m||n;
+  let prev=Array.from({length:n+1},(_,j)=>j), cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+function similar(a,b){
+  const x=norm(a), y=norm(b);
+  if(!x||!y) return false;
+  if(x===y) return true;                                  // 띄어쓰기만 다른 경우
+  if(y.length>=2 && (x.includes(y)||y.includes(x))) return true;   // 한쪽이 더 자세히 쓴 경우
+  // 짧은 답일수록 비율 기준이 가혹해서, 글자 수로 허용치를 정합니다
+  const d=lev(x,y), L=Math.max(x.length,y.length);
+  const 허용 = L<=4 ? 1 : L<=8 ? 2 : Math.floor(L*0.3);
+  return d<=허용;
+}
+function numOf(v){
+  const t=String(v??'').replace(/[,\s]/g,'');
+  if(/[만천]/.test(t)){                       // '2만', '1만8천' 처럼 적어도 알아듣게
+    let sum=0, m;
+    if((m=t.match(/(\d*)만/)))  sum += (m[1]? Number(m[1]) : 1)*10000;
+    if((m=t.match(/(\d+)천/)))  sum += Number(m[1])*1000;
+    if(sum) return sum;
+  }
+  const m=t.match(/-?\d+(\.\d+)?/);
+  return m? Number(m[0]) : null;
+}
+/* 'A' | 'B' | 'both' | 'none' */
+function autoGrade(truth, ans, need){
+  const t=numOf(truth), ns=need.map(k=>numOf(ans[k]));
+  if(t!=null && ns.every(n=>n!=null)){                    // 숫자 → 근접 판정
+    const gap=ns.map(n=>Math.abs(n-t)), best=Math.min(...gap);
+    const win=need.filter((k,i)=>gap[i]===best);
+    return win.length===need.length && need.length>1 ? 'both' : win[0];
+  }
+  const hit=need.filter(k=>similar(ans[k],truth));
+  if(!hit.length) return 'none';
+  if(hit.length===need.length && need.length>1) return 'both';
+  return hit[0];
+}
+
 /* ── 퀴즈: 한 문제씩 ─────────────────────────── */
 function queue(){
   const out=[];
-  S.customQ.forEach(q=>out.push({id:q.id,kind:'free',text:q.q,truth:q.a,by:q.by,from:SLOT(q.slot).place}));
+  S.customQ.forEach(q=>out.push({id:q.id,kind:'free',text:q.q,truth:q.a,by:q.by,from:placeOf(q.slot)}));
   S.aiQ.forEach((q,i)=>out.push({id:'ai'+i,kind:'choice',text:q.q,choices:q.choices,truth:q.answer,from:'발해역사관'}));
-  const pool=S.photos.filter(p=>['lunch','balhae','brew'].includes(p.slot));
+  const day1=TRIP.filter(t=>t.day===1).map(t=>t.id);
+  const pool=S.photos.filter(p=>day1.includes(p.slot));
   shuffle(pool,CONFIG.TRIP_DATE+'blur').slice(0,2).forEach((p,i)=>out.push({
-    id:'ph'+i,kind:'photo',text:'이 사진, 어디서 찍었게?',photo:p,truth:SLOT(p.slot).place,from:'가려진 사진'}));
+    id:'ph'+i,kind:'photo',text:'이 사진, 어디서 찍었게?',photo:p,truth:placeOf(p.slot),from:'가려진 사진'}));
   if(S.beers.names.A&&S.beers.names.B) out.push({id:'beer',kind:'beer',from:'양조장'});
-  SEALS.forEach(x=>out.push({id:'sl_'+x.id,kind:'seal',text:x.q,from:'아침 봉인'}));
+  SEALS.forEach(x=>out.push({id:'sl_'+x.id,kind:'seal',text:x.q,num:x.num,tip:x.tip,from:'아침 봉인'}));
   return out;
 }
 function askers(q){
@@ -720,6 +1034,21 @@ function askers(q){
 const ansOf = qid => S.show.ans[qid]||{};
 
 function vShow(){
+  if(!quizReady() && !peek.force){
+    const rs=readiness(), done=rs.filter(r=>r.ok).length;
+    return `<div class="card">
+      <p class="muted" style="margin-top:0">낮에 모을 걸 다 모으면 열립니다. 지금 ${done} / ${rs.length}.</p>
+      <div class="stack" style="margin-top:14px">
+        ${rs.map(r=>`<div class="answer" style="${r.ok?'border-style:solid;border-color:var(--green)':''}">
+          <b>${r.ok?'✓':'○'} ${esc(r.t)}</b>
+          ${r.ok?'':`<div class="muted" style="font-size:12.5px">${r.미비.length
+            ? r.미비.map(k=>esc(nameOf(k))).join(', ')+' 아직'
+            : '발해역사관에서 만들어주세요'}</div>`}</div>`).join('')}
+      </div>
+      <p class="muted center" style="margin:16px 0 0;font-size:12px">
+        <button style="font-size:12.5px;padding:8px 14px" data-run="forceShow">빠진 게 있어도 시작</button></p>
+    </div>`;
+  }
   const Q=queue();
   if(!Q.length) return `<div class="card center"><p class="muted" style="margin:0">
     아직 문제가 없습니다. 낮에 사진 찍고 문제를 만들어 두세요.</p></div>`;
@@ -740,13 +1069,14 @@ function vShow(){
     h+= v ? `<div class="answer" style="margin-top:13px;border-style:solid;border-color:var(--green)">
              <b>${esc(nameOf(v.order[v.winner]))} 승</b><div>${esc(v.why)}</div></div>`
           : `<button class="green wide" style="margin-top:14px" data-run="judgeNames">
-             ⚖️ AI 심사 받기 ${CONFIG.USE_DUMMY?'(더미)':''}</button>`;
+             ⚖️ AI 심사 받기 ${isDummy()?'(더미)':''}</button>`;
     return h+`</div>`+(v?nextBtn():'');
   }
 
   if(q.kind==='seal'){
     const rec=S.seals[q.id.slice(3)]||{};
     h+=`<div class="qbox"><div class="qt">${esc(q.text)}</div>
+      ${q.tip?`<p class="muted" style="margin:-8px 0 13px">${esc(q.tip)}</p>`:''}
       <div class="stack">
         <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
         <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div></div>
@@ -754,7 +1084,8 @@ function vShow(){
       <div class="row"><input id="tr" value="${esc(S.show.truth[q.id]??'')}" placeholder="결과 입력">
       <button style="flex:0 0 70px" data-run="setTruth" data-a="${q.id}">확인</button></div>`;
     if(S.show.truth[q.id]) h+=`<div class="answer" style="margin-top:13px;border-style:solid;border-color:var(--green)">
-      <b>정답</b><div>${esc(S.show.truth[q.id])}</div></div>`+gradeRow(q);
+      <b>정답</b><div>${esc(S.show.truth[q.id])}</div></div>`
+      +gradeRow(q, S.show.truth[q.id], {A:rec.A,B:rec.B}, ['A','B']);
     return h+`</div>`+(graded?nextBtn():'');
   }
 
@@ -788,23 +1119,33 @@ function vShow(){
   }
   return h+`</div>`+(graded?nextBtn():'');
 }
-function gradeRow(q){
+function gradeRow(q, truth, ans, need){
   const g=S.show.graded[q.id];
   if(g) return `<p class="center jua" style="font-size:17px;margin:15px 0 0">
     ${g==='none'?'둘 다 못 맞혔습니다':g==='both'?'둘 다 정답 🎉':esc(nameOf(g))+' 정답 +1'}</p>`;
+
   if(q.kind==='choice'){
     const a=ansOf(q.id);
     const auto = a.A===q.truth&&a.B===q.truth?'both' : a.A===q.truth?'A' : a.B===q.truth?'B' : 'none';
     setTimeout(()=>grade(q.id,auto),0);
     return '';
   }
-  return `<p class="muted center" style="margin:15px 0 7px">누가 맞혔나요?</p>
-    <div class="row">
-      <button class="primary" data-run="grade" data-a="${q.id}" data-b="A">${esc(nameOf('A'))}</button>
-      <button class="primary" data-run="grade" data-a="${q.id}" data-b="B">${esc(nameOf('B'))}</button></div>
-    <div class="row" style="margin-top:9px">
-      <button data-run="grade" data-a="${q.id}" data-b="both">둘 다</button>
-      <button data-run="grade" data-a="${q.id}" data-b="none">아무도</button></div>`;
+
+  truth = truth!==undefined? truth : q.truth;
+  ans   = ans   || ansOf(q.id);
+  need  = need  || askers(q);
+  const sug = autoGrade(truth, ans, need);
+  const 숫자 = numOf(truth)!=null && need.every(k=>numOf(ans[k])!=null);
+  const 안내 = 숫자 ? '숫자가 가장 가까운 쪽으로 봤습니다'
+                    : '띄어쓰기나 사소한 차이는 정답으로 봤습니다';
+
+  const b=(k,label,cls)=>`<button class="${sug===k?(cls||'primary'):''}"
+    data-run="grade" data-a="${q.id}" data-b="${k}">${sug===k?'✓ ':''}${label}</button>`;
+
+  return `<p class="muted center" style="margin:15px 0 3px">${안내}</p>
+    <p class="muted center" style="margin:0 0 8px;font-size:12px">아니면 눌러서 바꿔주세요</p>
+    <div class="row">${b('A',esc(nameOf('A')))}${b('B',esc(nameOf('B')))}</div>
+    <div class="row" style="margin-top:9px">${b('both','둘 다','green')}${b('none','아무도','')}</div>`;
 }
 const nextBtn = () => `<button class="denim wide" data-run="nextQ">다음 문제 →</button>`;
 function answer(qid,choice){
@@ -824,6 +1165,7 @@ function setTruth(qid){
   if(!v) return toast('결과를 넣어주세요');
   S.show.truth[qid]=v; save(); render();
 }
+function forceShow(){ if(confirm('아직 안 채운 게 있습니다. 그래도 시작할까요?')){ peek.force=true; render(); } }
 function nextQ(){ S.show.i++; save(); render(); }
 function prevQ(){ if(S.show.i>0){ S.show.i--; save(); render(); } }
 function vShowEnd(Q){
@@ -844,7 +1186,7 @@ async function judgeNames(){
   const n=S.beers.names;
   const order=shuffle(['A','B'],CONFIG.TRIP_DATE+'judge');
   const done=v=>{ S.beers.verdict=v; grade('beer',v.order[v.winner]); };
-  if(CONFIG.USE_DUMMY){
+  if(isDummy()){
     done({order,winner:0,why:'더미 심사입니다. 실전에서는 AI가 이유를 씁니다.'});
     return toast('더미 판정 (개발용)');
   }
@@ -855,69 +1197,123 @@ async function judgeNames(){
   }catch(e){ toast('실패: '+e.message); }
 }
 
-/* ── 2일차 사진 미션 ─────────────────────────── */
-function vMission(s){
-  const mine=photosOf(s.id,{by:me})[0], yours=photosOf(s.id,{by:other()})[0];
-  const both=mine&&yours;
-  let h=`<div class="card"><p class="muted" style="margin-top:0">${
-    s.mode==='theme'?'주제 하나, 각자 5분, 한 장씩. 정답은 없습니다.'
-                    :'상대 사진을 화면에 겹쳐 두고 맞춰서 찍습니다.'}</p>`;
-  if(s.theme) h+=`<div class="center" style="margin:15px 0">
-    <span class="tag red" style="font-size:16px;padding:8px 20px">${esc(s.theme)}</span></div>`;
+/* ── 2일차 색 모으기 ────────────────────────── */
+function vColor(){
+  const col=myColor(me), cs=colorShots(me), mid=midShot(me);
+  const left=CELLS-cs.length;
+  return `<div class="card">
+    <div class="chip"><span class="swatch" style="background:${col.hex}"></span>
+      <span class="big">내 색은 ${col.name}</span></div>
+    <p class="muted" style="margin-top:0">
+      이 색이 들어간 걸 찾아 찍으세요. 어디서 몇 시에 찍든 상관없습니다.
+      한 곳에서 여덟 장을 다 채워도 되고, 하루 종일 나눠 담아도 돼요.</p>
+    <p class="center jua" style="font-size:18px;margin:15px 0">
+      ${left>0? left+'칸 남았습니다' : '여덟 칸 다 찼습니다 ✓'}</p>
+    <button class="primary wide" ${left>0?'':'disabled'} data-run="shotColor">
+      📷 ${col.name} 찾아 찍기</button>
+    ${cs.length? `<button class="wide" style="margin-top:9px" data-run="undoColor">방금 것 빼기</button>`:''}
+  </div>
+  <div class="card"><div class="jua">가운데 한 칸</div>
+    <p class="muted" style="margin-top:2px">${esc(nameOf(other()))}를 찍어주세요. 판 한가운데에 들어갑니다.</p>
+    ${mid?`<div style="max-width:170px;margin:13px auto 0">
+      <div class="cell mid" style="border-radius:6px"><img src="${src(mid)}" alt=""></div></div>`:''}
+    <button class="green wide" style="margin-top:13px" data-run="shotMid">
+      📷 ${mid?'다시 찍기':esc(nameOf(other()))+' 찍기'}</button></div>
+  <div class="card"><div class="jua" style="margin-bottom:11px">내 판</div>
+    ${boardHtml(me)}
+    <p class="muted center" style="margin-bottom:0">상대 판은 귀가길에 함께 열립니다.</p></div>`;
+}
+function undoColor(){
+  const cs=colorShots(me); if(!cs.length) return;
+  const last=cs[cs.length-1];
+  S.photos=S.photos.filter(p=>p.id!==last.id); save(); render(); toast('한 칸 비웠습니다');
+}
+function shotColor(){ pickSquare({slot:'color', mission:'color'}); }
+function shotMid(){   pickSquare({slot:'color', mission:'mid'  }); }
 
-  if(s.mode==='overlay'){
-    h+= yours
-      ? `<div class="cam"><video id="v" playsinline muted></video>
-         <img class="ghostimg" src="${src(yours)}" style="opacity:${peek.op ?? 0.3}" alt="">
-         <div class="grid"></div></div>
-         <label>겹친 사진 진하기</label>
-         <input type="range" min="10" max="70" value="${(peek.op ?? 0.3)*100}"
-           oninput="peek.op=this.value/100;document.querySelector('.ghostimg').style.opacity=peek.op">
-         <button class="primary wide" style="margin-top:11px" data-run="snap" data-a="${s.id}">📸 지금 찍기</button>
-         <button class="wide" style="margin-top:9px" data-run="capShot" data-a="${s.id}">앨범에서 고르기</button>`
-      : `<p class="muted">${esc(nameOf(other()))}가 먼저 찍어야 겹칠 사진이 생깁니다.</p>
-         <button class="primary wide" data-run="capShot" data-a="${s.id}">📷 내가 먼저 찍기</button>`;
-  }else{
-    h+=`<button class="primary wide" data-run="capShot" data-a="${s.id}">📷 내 사진 붙이기</button>`;
-  }
-  h+=`<div class="shots" style="margin-top:17px">
-    <div class="shot ${mine?'':'empty'}">${mine?`<img src="${src(mine)}" alt=""><span class="who">${esc(nameOf(me))}</span>`:'내 사진'}</div>
-    <div class="shot ${both?'':'empty'}">${both?`<img src="${src(yours)}" alt=""><span class="who">${esc(nameOf(other()))}</span>`
-      :(yours?'🧵 내가 올리면 열림':'상대 대기 중')}</div>
-  </div></div>`;
+/* ── 2일차 따뜻한 질문 ──────────────────────── */
+function vWarm(){
+  const 답한수=WARM.filter(w=>S.warm[w.id]&&S.warm[w.id][me]!=null).length;
+  let h=`<div class="card tight"><p class="muted" style="margin:0">
+    맞히는 문제가 아닙니다. 답은 귀가길에 판과 함께 한 번에 열려요.
+    ${답한수}/${WARM.length} 적었습니다.</p></div>`;
+  WARM.forEach(w=>{
+    const rec=S.warm[w.id]||{}, mine=rec[me];
+    h+=`<div class="card"><div class="jua" style="font-size:16.5px;margin-bottom:11px">${esc(w.q)}</div>`;
+    h+= mine==null
+      ? `<textarea id="w_${w.id}" placeholder="편하게 적어주세요"></textarea>
+         <button class="primary wide" style="margin-top:10px" data-run="warmIn" data-a="${w.id}">넣어두기</button>`
+      : `<div class="pocket"><div class="flap">
+           <span>💌 넣어뒀습니다</span>
+           <small>${rec[other()]!=null?'둘 다 적었습니다 · 귀가길에':nameOf(other())+' 아직'}</small>
+         </div><div class="stack">
+           <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
+           <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div>
+         </div></div>
+         <button class="wide" style="margin-top:10px" data-run="warmEdit" data-a="${w.id}">고쳐 쓰기</button>`;
+    h+=`</div>`;
+  });
   return h;
 }
-let camStream=null;
-async function startCam(){
-  const v=document.getElementById('v'); if(!v) return;
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-    v.srcObject=camStream; await v.play();
-  }catch(e){ toast('카메라를 열 수 없습니다 — 앨범에서 고르세요'); }
+function warmIn(id){
+  const v=document.getElementById('w_'+id).value.trim();
+  if(!v) return toast('한 줄이라도 적어주세요');
+  S.warm[id]=S.warm[id]||{}; S.warm[id][me]=v; save(); render(); toast('넣어뒀습니다');
 }
-async function snap(slot){
-  const v=document.getElementById('v'); if(!v||!v.videoWidth) return toast('카메라 준비 중입니다');
-  const c=document.createElement('canvas');
-  const sc=Math.min(1,1200/Math.max(v.videoWidth,v.videoHeight));
-  c.width=v.videoWidth*sc; c.height=v.videoHeight*sc;
-  c.getContext('2d').drawImage(v,0,0,c.width,c.height);
-  await addPhoto(c.toDataURL('image/jpeg',.8),{slot});
-  camStream&&camStream.getTracks().forEach(t=>t.stop());
-  toast('찍었습니다');
+function warmEdit(id){
+  if(S.finale.opened) return toast('이미 열어본 답은 고칠 수 없습니다');
+  delete S.warm[id][me]; save(); render();
 }
 
 /* ── 결산 ────────────────────────────────────── */
 function vFinale(){
-  const yours=S.photos.filter(p=>p.by===other());
-  const picked=S.finale.best[me];
-  const pool=shuffle(S.photos.slice(),CONFIG.TRIP_DATE+'order').slice(0,8);
   const sc=S.show.scores;
-  let h=`<div class="label center"><div class="jua" style="font-size:19px">
-    ${sc.A===sc.B?'무승부입니다':esc(nameOf(sc.A>sc.B?'A':'B'))+' 우승 🏆'}</div>
-    <p class="muted" style="margin:5px 0 0">${sc.A} 대 ${sc.B}</p></div>`;
 
+  /* 아직 안 열었으면 봉투 하나만 */
+  if(!S.finale.opened){
+    const 판A=colorShots('A').length, 판B=colorShots('B').length;
+    const 답A=WARM.filter(w=>S.warm[w.id]&&S.warm[w.id].A!=null).length;
+    const 답B=WARM.filter(w=>S.warm[w.id]&&S.warm[w.id].B!=null).length;
+    return `<div class="card center">
+      <div class="jua" style="font-size:20px">이제 같이 볼 시간입니다</div>
+      <p class="muted" style="margin:8px 0 0">
+        서로의 판과, 서로에게 쓴 답이 한 번에 열립니다.<br>
+        같이 보세요. 한 번 열면 답은 못 고칩니다.</p>
+      <div class="stack" style="margin:18px 0">
+        <div class="answer"><b>${esc(nameOf('A'))}</b>
+          <div>색 ${판A}/${CELLS}칸 · 가운데 ${midShot('A')?'✓':'—'} · 답 ${답A}/${WARM.length}</div></div>
+        <div class="answer"><b>${esc(nameOf('B'))}</b>
+          <div>색 ${판B}/${CELLS}칸 · 가운데 ${midShot('B')?'✓':'—'} · 답 ${답B}/${WARM.length}</div></div>
+      </div>
+      <button class="primary wide" data-run="openFinale">💌 함께 열기</button>
+    </div>`;
+  }
+
+  /* 열린 뒤 */
+  let h=`<div class="label center"><div class="jua" style="font-size:20px">우리가 모은 것</div>
+    <p class="muted" style="margin:5px 0 0">사진 ${S.photos.length}장 · 퀴즈 ${sc.A} 대 ${sc.B}</p></div>`;
+
+  h+=['A','B'].map(k=>`<div class="card">
+    <div class="jua" style="margin-bottom:11px">
+      <span class="swatch" style="background:${myColor(k).hex}"></span>
+      ${esc(nameOf(k))}의 ${myColor(k).name} 판</div>
+    ${boardHtml(k)}</div>`).join('');
+
+  h+=`<div class="label"><h2>서로에게 쓴 답</h2>
+    <p class="muted" style="margin:5px 0 0">낮에 각자 넣어둔 것들입니다.</p></div>`;
+  h+=WARM.map(w=>{
+    const rec=S.warm[w.id]||{};
+    return `<div class="card">
+      <div class="jua" style="font-size:16px;margin-bottom:11px">${esc(w.q)}</div>
+      <div class="stack">
+        <div class="answer"><b>${esc(nameOf('A'))}</b><div>${esc(rec.A??'—')}</div></div>
+        <div class="answer"><b>${esc(nameOf('B'))}</b><div>${esc(rec.B??'—')}</div></div>
+      </div></div>`;
+  }).join('');
+
+  const yours=S.photos.filter(p=>p.by===other()), picked=S.finale.best[me];
   h+=`<div class="card"><div class="jua">${esc(nameOf(other()))}의 사진 중 베스트</div>
-    <p class="muted" style="margin-top:2px">한 장 고르고, 제목을 붙여주세요.</p>
+    <p class="muted" style="margin-top:2px">한 장 고르고 제목을 붙여주세요.</p>
     <div class="shots">${yours.length? yours.map(p=>
       `<div class="shot" style="${picked===p.id?'box-shadow:0 0 0 4px var(--red)':''}">
         <img src="${src(p)}" alt="" data-run="pickBest" data-a="${p.id}"></div>`).join('')
@@ -927,21 +1323,26 @@ function vFinale(){
     <button class="primary" style="flex:0 0 70px" data-run="setTitle">저장</button></div>`;
   h+=`</div>`;
 
-  h+=`<div class="card"><div class="jua">시간순 맞히기</div>
-    <p class="muted" style="margin-top:2px">찍은 순서대로 눌러주세요.</p>
-    <div class="shots">${pool.map(p=>{
-      const n=(peek.order||[]).indexOf(p.id);
-      return `<div class="shot" style="${n>=0?'box-shadow:0 0 0 4px var(--green)':''}">
-        <img src="${src(p)}" alt="" data-run="tapOrder" data-a="${p.id}">
-        ${n>=0?`<span class="who">${n+1}</span>`:''}</div>`;}).join('')}</div>
-    <div class="row" style="margin-top:13px">
-      <button data-run="resetOrder">다시</button>
-      <button class="green" data-run="gradeOrder">채점</button></div>
-    ${S.finale.orderScore!=null?`<p class="center jua" style="font-size:18px;margin-bottom:0">
-      ${pool.length}장 중 ${S.finale.orderScore}장 정확</p>`:''}</div>
-  <div class="card center"><p class="muted" style="margin:0">
-    사진 ${S.photos.length}장 · 문제 ${S.customQ.length+S.aiQ.length}개 · 봉인 ${SEALS.length}건</p></div>`;
+  const pool=shuffle(S.photos.slice(),CONFIG.TRIP_DATE+'order').slice(0,8);
+  if(pool.length>=3){
+    h+=`<div class="card"><div class="jua">시간순 맞히기</div>
+      <p class="muted" style="margin-top:2px">찍은 순서대로 눌러주세요.</p>
+      <div class="shots">${pool.map(p=>{
+        const n=(peek.order||[]).indexOf(p.id);
+        return `<div class="shot" style="${n>=0?'box-shadow:0 0 0 4px var(--green)':''}">
+          <img src="${src(p)}" alt="" data-run="tapOrder" data-a="${p.id}">
+          ${n>=0?`<span class="who">${n+1}</span>`:''}</div>`;}).join('')}</div>
+      <div class="row" style="margin-top:13px">
+        <button data-run="resetOrder">다시</button>
+        <button class="green" data-run="gradeOrder">채점</button></div>
+      ${S.finale.orderScore!=null?`<p class="center jua" style="font-size:18px;margin-bottom:0">
+        ${pool.length}장 중 ${S.finale.orderScore}장 정확</p>`:''}</div>`;
+  }
   return h;
+}
+function openFinale(){
+  if(!confirm('한 번 열면 답을 고칠 수 없습니다. 둘이 같이 보고 계신가요?')) return;
+  S.finale.opened=true; save(); render();
 }
 function pickBest(id){ S.finale.best[me]=id; save(); render(); }
 function setTitle(){
@@ -965,6 +1366,16 @@ function gradeOrder(){
 
 /* ── 앨범 / 나 ───────────────────────────────── */
 function screenAlbum(){
+  let top='';
+  if(bothIn()) top=['A','B'].map(k=>`<div class="card">
+    <div class="jua" style="margin-bottom:11px"><span class="swatch" style="background:${myColor(k).hex}"></span>
+      ${esc(nameOf(k))}의 ${myColor(k).name} 판 · ${colorShots(k).length}/${CELLS}</div>
+    ${boardHtml(k)}</div>`).join('');
+  if(!S.photos.length) return top+`<div class="card center"><p class="muted" style="margin:0">
+    아직 한 장도 없습니다.</p></div>`;
+  return top+albumRest();
+}
+function albumRest(){
   if(!S.photos.length) return `<div class="card center"><p class="muted" style="margin:0">
     아직 한 장도 없습니다.</p></div>`;
   let h='';
@@ -986,12 +1397,25 @@ function screenMe(){
       내가 낸 문제 ${S.customQ.filter(q=>q.by===me).length}개</p>
     <p class="muted">함께: ${esc(nameOf(other()))||'아직 없음'}</p>
     <p class="muted">${CONFIG.API_URL?(online?'연결됨':'오프라인 — 임시 저장 중'):'서버 없음 — 이 기기에만'}
-      ${CONFIG.USE_DUMMY?' · 더미 모드':''}</p>
+      ${isDummy()?' · 더미 모드 (여행 당일 자동 해제)':''}</p>
     <button class="wide" style="margin-top:8px" data-run="leave">나가기</button>
     <button class="wide" style="margin-top:9px" data-run="wipe">전부 지우기</button></div>`;
 }
 function leave(){ S.names[me]=''; me=null; store.set('me',''); skipWait=false; save(); render(); }
 function wipe(){ if(confirm('사진과 점수까지 전부 지웁니다. 계속할까요?')){ S=blank(); me=null; store.set('me',''); save(); render(); } }
+
+/* 자르기 창 끌기 */
+(function(){
+  const cv=document.getElementById('cropcv');
+  let drag=false,lx=0,ly=0;
+  cv.addEventListener('pointerdown',e=>{ if(!cropState)return;
+    drag=true; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove',e=>{ if(!drag||!cropState)return;
+    const r=cv.getBoundingClientRect(), k=cropState.V/r.width;
+    cropState.ox+=(e.clientX-lx)*k; cropState.oy+=(e.clientY-ly)*k;
+    lx=e.clientX; ly=e.clientY; drawCrop(); });
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>drag=false));
+})();
 
 render(); pull();
 
