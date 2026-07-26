@@ -401,7 +401,7 @@ const store={
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,v); }catch(e){} }
 };
 const blank = () => ({
-  names:{A:'',B:''}, seen:{}, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
+  names:{A:'',B:''}, seen:{}, colors:{A:null,B:null}, seals:{}, warm:{}, photos:[], customQ:[], aiQ:[],
   beers:{ names:{}, verdict:null },
   show:{ i:0, scores:{A:0,B:0}, ans:{}, truth:{}, graded:{} },
   finale:{ opened:false, best:{}, titles:{}, orderScore:null },
@@ -413,7 +413,7 @@ function hydrate(raw){
   const b=blank();
   if(!raw||typeof raw!=='object') return b;
   const out=Object.assign(b,raw);
-  ['names','seen','seals','warm','beers','show','finale','guesses'].forEach(k=>{
+  ['names','seen','colors','seals','warm','beers','show','finale','guesses'].forEach(k=>{
     if(k in b) out[k]=Object.assign({},b[k],raw[k]||{});
   });
   out.beers.names  = Object.assign({}, (raw.beers&&raw.beers.names)||{});
@@ -609,10 +609,13 @@ function pickSquare(meta){
   const i=document.createElement('input');
   i.type='file'; i.accept='image/*'; i.capture='environment';
   i.onchange=()=>{ if(i.files[0]) openCrop(i.files[0], async url=>{
-    toast('색을 재는 중…');
-    const pct=await colorPct(url, myColor(me));
-    await addPhoto(url, Object.assign({pct}, meta));
-    toast(pct>=12? '좋아요, '+myColor(me).name+' '+pct+'%' : myColor(me).name+'이 '+pct+'% 뿐이에요');
+    const col=myColor(me);
+    if(!col && meta.mission==='color'){ toast('색부터 뽑아주세요'); return; }
+    let pct=null;
+    if(col && meta.mission==='color'){ toast('색을 재는 중…'); pct=await colorPct(url,col); }
+    await addPhoto(url, Object.assign(pct!=null?{pct}:{}, meta));
+    if(pct!=null) toast(pct>=12? '좋아요, '+col.name+' '+pct+'%' : col.name+'이 '+pct+'% 뿐이에요');
+    else toast('붙였습니다');
   }); };
   i.click();
 }
@@ -687,10 +690,22 @@ const other2 = k => k==='A'?'B':'A';
 const nameOf = k => S.names[k] || (k==='A'?'왼쪽':'오른쪽');
 const bothIn = () => !!(S.names.A && S.names.B);
 
-/* 여행 날짜로 색을 나눕니다. 둘이 겹치지 않아요. */
+/* 색은 코드가 미리 정하지 않습니다. 현장에서 각자 뽑아요. */
+const NOCOLOR={ id:'', name:'아직', hex:'#D9CDB8', h:-999 };
 function myColor(k){
-  const sh=shuffle(PALETTE, CONFIG.TRIP_DATE+'color');
-  return k==='A'? sh[0] : sh[1];
+  const id=S.colors && S.colors[k];
+  return PALETTE.find(c=>c.id===id) || null;
+}
+const colorOr = k => myColor(k) || NOCOLOR;
+
+/* 상대가 가진 색은 빼고 뽑습니다 */
+function drawColor(){
+  if(myColor(me)) return;
+  const 상대=S.colors && S.colors[other()];
+  const 후보=PALETTE.filter(c=>c.id!==상대);
+  const 뽑힘=후보[Math.floor(Math.random()*후보.length)];
+  S.colors=Object.assign({A:null,B:null},S.colors); S.colors[me]=뽑힘.id;
+  save(); render(); toast(뽑힘.name+'입니다');
 }
 const colorShots = k => S.photos.filter(p=>p.mission==='color' && p.by===k);
 const midShot    = k => S.photos.find(p=>p.mission==='mid' && p.by===k);
@@ -967,7 +982,10 @@ async function genQuiz(){
   }
   toast('만드는 중… 20초쯤');
   try{
-    const out=await call('genQuiz',{ images:panels.slice(0,4).map(p=>p.url||p.local), count:8 });
+    await retryUploads();                       // 아직 못 올린 사진이 있으면 먼저 올리고
+    const imgs=panels.slice(0,4).map(src).filter(u=>typeof u==='string' && u.length>30);
+    if(!imgs.length) return toast('패널 사진이 아직 안 올라갔습니다. 잠시 뒤 다시 눌러주세요');
+    const out=await call('genQuiz',{ images:imgs, count:8 });
     S.aiQ=shuffle(out.questions,CONFIG.TRIP_DATE).slice(0,6); save(); render();
     toast(S.aiQ.length+'문제 준비 완료');
   }catch(e){ toast('실패: '+e.message); }
@@ -1236,7 +1254,18 @@ async function judgeNames(){
 
 /* ── 2일차 색 모으기 ────────────────────────── */
 function vColor(){
-  const col=myColor(me), cs=colorShots(me), mid=midShot(me);
+  const col=myColor(me);
+  if(!col) return `<div class="card center">
+    <div class="jua" style="font-size:19px">아직 색을 안 뽑았습니다</div>
+    <p class="muted" style="margin:8px 0 0">
+      여덟 가지 중 하나가 나옵니다. ${esc(nameOf(other()))}와 겹치지 않아요.<br>
+      한 번 뽑으면 못 바꿉니다.</p>
+    <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin:20px 0">
+      ${PALETTE.map(c=>`<span class="swatch" style="background:${c.hex};opacity:.45"></span>`).join('')}
+    </div>
+    <button class="primary wide" data-run="drawColor">🎲 내 색 뽑기</button>
+  </div>`;
+  const cs=colorShots(me), mid=midShot(me);
   const left=CELLS-cs.length;
   return `<div class="card">
     <div class="chip"><span class="swatch" style="background:${col.hex}"></span>
@@ -1332,8 +1361,8 @@ function vFinale(){
 
   h+=['A','B'].map(k=>`<div class="card">
     <div class="jua" style="margin-bottom:11px">
-      <span class="swatch" style="background:${myColor(k).hex}"></span>
-      ${esc(nameOf(k))}의 ${myColor(k).name} 판</div>
+      <span class="swatch" style="background:${colorOr(k).hex}"></span>
+      ${esc(nameOf(k))}의 ${myColor(k)?colorOr(k).name+' ':''}판</div>
     ${boardHtml(k)}</div>`).join('');
 
   h+=`<div class="label"><h2>서로에게 쓴 답</h2>
@@ -1431,8 +1460,8 @@ function screenAlbum(){
     const 열림 = (k===me) || S.finale.opened;
     return `<div class="card">
       <div class="jua" style="margin-bottom:11px">
-        <span class="swatch" style="background:${myColor(k).hex}"></span>
-        ${esc(nameOf(k))}의 ${열림?myColor(k).name+' 판':'판'} · ${colorShots(k).length}/${CELLS}칸
+        <span class="swatch" style="background:${colorOr(k).hex}"></span>
+        ${esc(nameOf(k))}의 ${열림&&myColor(k)?colorOr(k).name+' 판':'판'} · ${colorShots(k).length}/${CELLS}칸
         ${midShot(k)?' · 가운데 ✓':''}</div>
       ${열림 ? boardHtml(k)
              : `<div class="board">${Array.from({length:9},(_,i)=>
