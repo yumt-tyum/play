@@ -512,11 +512,19 @@ async function push(){
   }catch(e){ dirty=true; } finally{ pushing=false; }
 }
 
-/* 못 올린 사진 다시 시도 */
+/* 못 올린 사진 다시 시도.
+   fileId 가 있으면 이미 올라간 것입니다. 내가 찍은 것만 봅니다. */
+let 올리는중=false;
 async function retryUploads(){
-  if(!CONFIG.API_URL||!online) return;
-  const 남은것=S.photos.filter(p=>!p.url && (p.local||blobs[p.id]));
+  if(!CONFIG.API_URL||!online||올리는중) return;
+  const 남은것=S.photos.filter(p=>!p.fileId && !p.url && p.by===me && (p.local||blobs[p.id]));
+  if(!남은것.length) return;
+  올리는중=true;
+  try{ await 올리기(남은것); } finally{ 올리는중=false; }
+}
+async function 올리기(남은것){
   for(const p of 남은것){
+    if(p.fileId) continue;                       // 그 사이 올라갔으면 건너뜀
     try{
       const up=await call('upload',{id:p.id, dataUrl:p.local||blobs[p.id], slot:p.slot,
         place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(p.by)});
@@ -569,6 +577,7 @@ async function addPhoto(dataUrl,meta){
     by:me, ts:Date.now(), local:dataUrl, url:null}, meta);
   사진보관(p.id, dataUrl, true);            // 올라갈 때까지 기기에 보관
   S.photos.push(p); save(); render();
+  if(올리는중) return p;                     // 재시도가 돌고 있으면 거기서 처리합니다
   try{
     const up=await call('upload',{id:p.id,dataUrl,slot:p.slot,
       place:(SLOT(p.slot)||{}).place||p.slot, day:(SLOT(p.slot)||{}).day||1, who:nameOf(me)});
