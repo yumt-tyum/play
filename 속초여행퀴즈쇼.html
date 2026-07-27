@@ -334,7 +334,7 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
    0. 설정
    ═══════════════════════════════════════════════ */
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbz2bPUmXTWt4BcwQzjNl5HuD-K5e8MYNSd4adNGTUYOXeTcx3lfz7M-ObKiLkMgI3Fo/exec',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
+  API_URL: 'https://script.google.com/macros/s/AKfycbz2bPUmXTWt4BcwQzjNl5HuD-K5e8MYNSd4adNGTUYOXeTcx3lfz7M-ObKiLkMgI3Fo/exec'        // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
   USE_DUMMY: false,       // 실전. true 로 두면 테스트 문항만 나옵니다.
   TRIP_DATE: '2026-08-15',
   POLL_MS: 4000
@@ -617,7 +617,7 @@ const photosOf = (slot,opt={}) => S.photos.filter(p=>
 async function pick(meta,cb,opt){
   opt=opt||{};
   const i=document.createElement('input');
-  i.type='file'; i.accept='image/*'; i.capture='environment';
+  i.type='file'; i.accept='image/*';   // capture 를 빼면 촬영·사진첩 둘 다 고를 수 있습니다
   i.onchange=async()=>{
     if(!i.files[0]) return;
     toast('줄이는 중…');
@@ -690,7 +690,7 @@ function doneCrop(){
 }
 function pickSquare(meta){
   const i=document.createElement('input');
-  i.type='file'; i.accept='image/*'; i.capture='environment';
+  i.type='file'; i.accept='image/*';   // capture 를 빼면 촬영·사진첩 둘 다 고를 수 있습니다
   i.onchange=()=>{ if(i.files[0]) openCrop(i.files[0], async url=>{
     const col=myColor(me);
     if(!col && meta.mission==='color'){ toast('색부터 뽑아주세요'); return; }
@@ -907,19 +907,60 @@ function screenJoin(){
     <button class="primary wide" style="margin-top:13px" id="joinBtn">들어가기</button>
     <p class="muted center" style="margin:12px 0 0">
       ${CONFIG.API_URL? '두 사람이 같은 방에 들어옵니다.' : '서버가 없어 이 기기에만 저장됩니다.'}</p>
-  </div>`;
+  </div>
+  ${접속오류?`
+  <div class="card" style="border:3px solid var(--red);border-radius:16px">
+    <div class="jua">들어가지 못했습니다</div>
+    <p class="muted" style="margin-top:2px;word-break:break-all">${esc(접속오류.msg)}</p>
+    <button class="primary wide" style="margin-top:12px" id="retry">다시 해보기</button>
+    <button class="wide" style="margin-top:9px" id="alone">서버 없이 이 폰에서만 시작</button>
+    <p class="muted" style="margin:11px 0 0;font-size:12px">
+      서버 없이 시작해도 사진과 답은 이 폰에 남습니다.
+      나중에 서버가 되면 그때 이어서 쓰시면 돼요.</p>
+  </div>`:''}
+  ${(S.names.A||S.names.B)?`
+  <div class="card">
+    <div class="jua">이미 들어와 있는 사람</div>
+    <p class="muted" style="margin-top:2px">
+      <b>같은 이름을 넣으면 그 자리로 돌아갑니다.</b> 기록도 그대로예요.<br>
+      다른 기기에서 들어간 자리를 쓰시려면 비우면 됩니다. 사진과 답은 안 지워져요.</p>
+    <div class="stack" style="margin-top:12px">
+      ${['A','B'].filter(k=>S.names[k]).map(k=>`
+        <div class="answer" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>${esc(S.names[k])}</span>
+          <button style="font-size:12.5px;padding:7px 13px" data-free="${k}">자리 비우기</button>
+        </div>`).join('')}
+    </div>
+  </div>`:''}`;
   const go=()=>join(el.querySelector('#nm').value.trim());
   el.querySelector('#joinBtn').addEventListener('click',go);
   el.querySelector('#nm').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  el.querySelectorAll('[data-free]').forEach(b=>
+    b.addEventListener('click',()=>자리비우기(b.dataset.free)));
+  const r=el.querySelector('#retry'), a=el.querySelector('#alone');
+  if(r) r.addEventListener('click',()=>{ const n=접속오류.name; 접속오류=null; join(n); });
+  if(a) a.addEventListener('click',()=>{ const n=접속오류.name; 접속오류=null; join(n,true); });
 }
-async function join(name){
-  if(!name) return toast('이름을 적어주세요');
+async function 자리비우기(k){
+  if(!confirm(S.names[k]+' 자리를 비웁니다. 사진과 답은 그대로 남아요. 계속할까요?')) return;
   if(CONFIG.API_URL){
+    try{ const r=await call('freeSeat',{seat:k}); S=hydrate(r.state); 기기저장(); }
+    catch(e){ return toast(e.message); }
+  }else{
+    S.names[k]=''; save();
+  }
+  render(); toast('자리를 비웠습니다');
+}
+let 접속오류=null;
+async function join(name, 서버없이){
+  if(!name) return toast('이름을 적어주세요');
+  if(CONFIG.API_URL && !서버없이){
     toast('들어가는 중…');
     try{
       const r=await call('join',{name});
-      S=hydrate(r.state); me=r.seat;
-    }catch(e){ return toast(e.message); }
+      if(!r || !r.seat) throw new Error('서버가 자리를 주지 않았습니다');
+      S=hydrate(r.state); me=r.seat; 접속오류=null;
+    }catch(e){ 접속오류={ msg:e.message, name }; render(); return; }
   }else{
     const n=S.names;
     const seat = n.A===name?'A' : n.B===name?'B' : !n.A?'A' : !n.B?'B' : null;
@@ -939,8 +980,9 @@ function screenWait(){
   </div>
   <div class="card center">
     <div class="dots"><i></i><i></i><i></i></div>
-    <p class="muted" style="margin:0">상대가 같은 주소로 들어와서 이름을 적으면 됩니다.</p>
-    <button class="wide" style="margin-top:16px" id="skip">혼자 먼저 둘러보기</button>
+    <p class="muted" style="margin:0">상대가 같은 주소로 들어와서 이름을 적으면 됩니다.<br>
+      <b>지금 바로 시작해도 됩니다.</b> 상대는 나중에 들어와도 이어져요.</p>
+    <button class="primary wide" style="margin-top:16px" id="skip">혼자 먼저 시작하기</button>
     <button class="wide" style="margin-top:9px" id="out">나가기</button>
   </div>`;
   el.querySelector('#skip').addEventListener('click',()=>{ skipWait=true; render(); });
