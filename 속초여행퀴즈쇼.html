@@ -617,7 +617,7 @@ const photosOf = (slot,opt={}) => S.photos.filter(p=>
 async function pick(meta,cb,opt){
   opt=opt||{};
   const i=document.createElement('input');
-  i.type='file'; i.accept='image/*'; i.capture='environment';
+  i.type='file'; i.accept='image/*';
   i.onchange=async()=>{
     if(!i.files[0]) return;
     toast('줄이는 중…');
@@ -690,7 +690,7 @@ function doneCrop(){
 }
 function pickSquare(meta){
   const i=document.createElement('input');
-  i.type='file'; i.accept='image/*'; i.capture='environment';
+  i.type='file'; i.accept='image/*';
   i.onchange=()=>{ if(i.files[0]) openCrop(i.files[0], async url=>{
     const col=myColor(me);
     if(!col && meta.mission==='color'){ toast('색부터 뽑아주세요'); return; }
