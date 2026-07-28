@@ -203,6 +203,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .cell img{width:100%;height:100%;object-fit:cover;display:block;
   background:var(--paper-2) repeating-linear-gradient(45deg,rgba(201,169,138,.22) 0 8px,transparent 8px 16px)}
 .cell.mid{border:3px solid var(--red)}
+.cell.고름{border:3px solid var(--mustard);box-shadow:0 0 0 3px rgba(224,169,58,.35)}
 .cell .pct{position:absolute;right:3px;bottom:3px;background:rgba(255,253,246,.92);
   border-radius:99px;padding:0 6px;font-size:10px;font-family:'Jua'}
 .swatch{display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:-4px;
@@ -293,6 +294,23 @@ nav button{flex:1;padding:10px 3px;font-size:13px;background:rgba(251,243,226,.9
 </head>
 <body>
 
+<script>
+/* 아래 코드에서 문법 오류가 나면 그 블록이 통째로 실행되지 않습니다.
+   그때 진짜 원인을 알 수 있도록 가장 먼저 오류를 받아 둡니다. */
+window.__firstError = null;
+window.addEventListener('error', function (e) {
+  if (window.__firstError) return;
+  window.__firstError = (e.message || '오류') +
+    (e.filename ? ('\n' + String(e.filename).split('/').pop()) : '') +
+    (e.lineno ? (' ' + e.lineno + '번째 줄 ' + (e.colno || 0) + '칸') : '');
+});
+/* 무엇이 잘못돼도 되돌릴 수 있는 최소 기능. 앱 코드에 기대지 않습니다. */
+window.__reset = function () {
+  try { localStorage.clear(); } catch (x) {}
+  location.replace(location.pathname + '?v=' + Date.now());
+};
+</script>
+
 <div class="netbar" id="netbar">오프라인 — 저장해뒀다가 연결되면 자동으로 보냅니다</div>
 
 <div class="wrap">
@@ -337,6 +355,8 @@ const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbz2bPUmXTWt4BcwQzjNl5HuD-K5e8MYNSd4adNGTUYOXeTcx3lfz7M-ObKiLkMgI3Fo/exec',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
   USE_DUMMY: false,       // 실전. true 로 두면 테스트 문항만 나옵니다.
   TRIP_DATE: '2026-08-15',
+  // 사진을 어디서 가져올지: 'both' 촬영+앨범 · 'album' 앨범만 · 'camera' 촬영만
+  PHOTO_SOURCE: 'both',
   POLL_MS: 4000
 };
 
@@ -385,6 +405,10 @@ const PALETTE=[
   { id:'pink',   name:'분홍', hex:'#E4989E', h:345 }
 ];
 const CELLS = 8;   // 가운데를 뺀 여덟 칸
+
+/* 문제별 배점. 적어두지 않은 문제는 1점입니다. */
+const 배점 = { beer: 3 };
+const 점수몫 = qid => 배점[qid] || 1;
 
 /* 2일차 · 맞히는 게 아니라 건네는 질문. 귀가길까지 잠겨 있습니다. */
 const WARM=[
@@ -516,7 +540,7 @@ async function push(){
 let 올리는중=false;
 async function retryUploads(){
   if(!CONFIG.API_URL||!online||올리는중) return;
-  const 남은것=S.photos.filter(p=>!p.fileId && !p.url && p.by===me && (p.local||blobs[p.id]));
+  const 남은것=산사진().filter(p=>!p.fileId && !p.url && p.by===me && (p.local||blobs[p.id]));
   if(!남은것.length) return;
   올리는중=true;
   try{ await 올리기(남은것); } finally{ 올리는중=false; }
@@ -546,8 +570,6 @@ async function pull(){
 }
 setInterval(pull, CONFIG.POLL_MS);
 
-</script>
-<script>
 
 /* ═══════════════════════════════════════════════
    4. 사진
@@ -575,7 +597,20 @@ async function addPhoto(dataUrl,meta){
   const p=Object.assign({id:'p'+Date.now()+Math.random().toString(36).slice(2,6),
     by:me, ts:Date.now(), local:dataUrl, url:null}, meta);
   사진보관(p.id, dataUrl, true);            // 올라갈 때까지 기기에 보관
-  S.photos.push(p); save(); render();
+  S.photos.push(p);
+  // 가운데 사진은 한 장뿐입니다. 새로 찍으면 이전 것을 지웁니다.
+  if(p.mission==='mid'){
+    S.photos.forEach(x=>{
+      if(x!==p && !x.del && x.mission==='mid' && x.by===p.by) 사진지우기(x);
+    });
+  }
+  // 같은 칸에 이미 사진이 있으면 갈아 끼웁니다.
+  if(p.mission==='color' && Number.isInteger(p.cell)){
+    S.photos.forEach(x=>{
+      if(x!==p && !x.del && x.mission==='color' && x.by===p.by && x.cell===p.cell) 사진지우기(x);
+    });
+  }
+  save(); render();
   if(올리는중) return p;                     // 재시도가 돌고 있으면 거기서 처리합니다
   try{
     const up=await call('upload',{id:p.id,dataUrl,slot:p.slot,
@@ -612,12 +647,26 @@ function src(p){
   사진받기(p);
   return 빈칸;
 }
-const photosOf = (slot,opt={}) => S.photos.filter(p=>
+const 산사진 = () => S.photos.filter(p=>!p.del);
+const photosOf = (slot,opt={}) => 산사진().filter(p=>
   p.slot===slot && (!opt.mission||p.mission===opt.mission) && (!opt.by||p.by===opt.by));
+/* 파일 고르는 칸을 설정대로 만들어 줍니다 */
+function 사진칸(){
+  const i=document.createElement('input');
+  i.type='file';
+  const 방식=CONFIG.PHOTO_SOURCE||'both';
+  if(방식==='album'){
+    i.accept='.jpg,.jpeg,.png,.heic,.heif,.webp';   // image/* 를 피하면 카메라가 잘 안 뜹니다
+  }else{
+    i.accept='image/*';
+    if(방식==='camera') i.capture='environment';
+  }
+  return i;
+}
+
 async function pick(meta,cb,opt){
   opt=opt||{};
-  const i=document.createElement('input');
-  i.type='file'; i.accept='image/*';
+  const i=사진칸();
   i.onchange=async()=>{
     if(!i.files[0]) return;
     toast('줄이는 중…');
@@ -689,8 +738,7 @@ function doneCrop(){
   const cb=c.cb; closeCrop(); cb(url);
 }
 function pickSquare(meta){
-  const i=document.createElement('input');
-  i.type='file'; i.accept='image/*';
+  const i=사진칸();
   i.onchange=()=>{ if(i.files[0]) openCrop(i.files[0], async url=>{
     const col=myColor(me);
     if(!col && meta.mission==='color'){ toast('색부터 뽑아주세요'); return; }
@@ -794,22 +842,46 @@ function drawColor(){
   S.colors=Object.assign({A:null,B:null},S.colors); S.colors[me]=뽑힘.id;
   save(); render(); toast(뽑힘.name+'입니다');
 }
-const colorShots = k => S.photos.filter(p=>p.mission==='color' && p.by===k);
-const midShot    = k => S.photos.find(p=>p.mission==='mid' && p.by===k);
+const colorShots = k => 산사진().filter(p=>p.mission==='color' && p.by===k);
+/* 여러 장이 남아 있어도 마지막에 찍은 것을 씁니다 */
+const midShot    = k => 산사진().filter(p=>p.mission==='mid' && p.by===k)
+                              .sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
+
+/* 칸 배치. 예전에 찍어 칸 번호가 없는 사진은 빈 칸에 차례로 놓습니다. */
+function 칸배치(k){
+  const cs=colorShots(k).slice().sort((a,b)=>(a.ts||0)-(b.ts||0));
+  const 칸=new Array(CELLS).fill(null), 남은=[];
+  cs.forEach(p=>{
+    const c=p.cell;
+    if(Number.isInteger(c) && c>=0 && c<CELLS && !칸[c]) 칸[c]=p;
+    else 남은.push(p);
+  });
+  남은.forEach(p=>{ const i=칸.indexOf(null); if(i>=0) 칸[i]=p; });
+  return 칸;
+}
+/* 칸 번호가 없는 예전 사진에 번호를 한 번 붙여 둡니다. 자리가 흔들리지 않게요. */
+function 칸번호채우기(){
+  const 칸=칸배치(me); let 바뀜=false;
+  칸.forEach((p,i)=>{ if(p && p.cell!==i){ p.cell=i; 바뀜=true; } });
+  if(바뀜) save();
+}
 
 /* 3×3 판. 가운데는 내가 찍은 상대 인물 사진. */
-function boardHtml(k){
-  const cs=colorShots(k), mid=midShot(k), col=myColor(k);
+function boardHtml(k, opt){
+  opt=opt||{};
+  const 칸=칸배치(k), mid=midShot(k);
   let cells=[];
   for(let i=0;i<9;i++){
     if(i===4){
-      cells.push(`<div class="cell mid">${mid?`<img src="${src(mid)}" alt="">`:'가운데<br>인물'}</div>`);
-    }else{
-      const n=i<4?i:i-1, p=cs[n];
-      cells.push(`<div class="cell">${p
-        ? `<img src="${src(p)}" alt="">${p.pct!=null?`<span class="pct">${p.pct}%</span>`:''}`
-        : (n+1)}</div>`);
+      cells.push(`<div class="cell mid"${opt.tap?' data-run="칸가운데"':''}>${
+        mid?`<img src="${src(mid)}" alt="">`:'가운데<br>인물'}</div>`);
+      continue;
     }
+    const n=i<4?i:i-1, p=칸[n];
+    const 고른칸 = opt.tap && peek.칸===n;
+    cells.push(`<div class="cell${고른칸?' 고름':''}"${opt.tap?` data-run="칸누름" data-a="${n}"`:''}>${p
+      ? `<img src="${src(p)}" alt="">${p.pct!=null?`<span class="pct">${p.pct}%</span>`:''}`
+      : `<span style="font-family:'Jua';font-size:15px">${n+1}</span>`}</div>`);
   }
   return `<div class="board">${cells.join('')}</div>`;
 }
@@ -848,16 +920,23 @@ function isDone(s){
 function render(){ try{ draw(); }catch(e){ crashed(e); } }
 function crashed(e){
   console.error(e);
-  document.querySelector('.bottom').style.display='none';
-  document.getElementById('app').innerHTML=`
-    <div class="label"><h2>화면을 그리지 못했습니다</h2>
-      <p class="muted" style="margin:6px 0 0">저장된 기록이 지금 버전과 안 맞는 것 같아요.</p></div>
-    <div class="card">
-      <p class="muted" style="margin-top:0">기록을 지우고 다시 시작하면 해결됩니다.
-        서버를 쓰고 계시면 상대 기기의 기록은 그대로예요.</p>
-      <button class="primary wide" onclick="wipe()">기록 지우고 다시 시작</button>
-      <p class="muted" style="margin:14px 0 0;font-size:12px;word-break:break-all">${esc(String(e&&e.message||e))}</p>
-    </div>`;
+  var bar=document.querySelector('.bottom'); if(bar) bar.style.display='none';
+  var 진짜 = window.__firstError || String((e&&e.message)||e);
+  var 안전 = function(t){ return String(t).replace(/[&<>]/g,function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]; }); };
+  document.getElementById('app').innerHTML=
+    '<div class="label"><h2>화면을 그리지 못했습니다</h2>'+
+      '<p class="muted" style="margin:6px 0 0">대개는 예전 파일이 남아 있어서 생깁니다.</p></div>'+
+    '<div class="card">'+
+      '<p class="muted" style="margin-top:0"><b>먼저 이걸 눌러보세요.</b> 최신 파일을 새로 받아옵니다. '+
+        '기록은 안 지웁니다.</p>'+
+      '<button class="primary wide" onclick="location.replace(location.pathname+\'?v=\'+Date.now())">'+
+        '최신으로 새로 받기</button>'+
+      '<p class="muted" style="margin:16px 0 0">그래도 안 되면 이 폰의 기록을 지웁니다. '+
+        '서버를 쓰고 계시면 올라간 기록과 상대 기기는 그대로예요.</p>'+
+      '<button class="wide" style="margin-top:9px" onclick="window.__reset()">기록 지우고 다시 시작</button>'+
+      '<p class="muted" style="margin:16px 0 0;font-size:12px;word-break:break-all">'+안전(진짜)+'</p>'+
+    '</div>';
 }
 function draw(){
   const el=document.getElementById('app');
@@ -907,19 +986,60 @@ function screenJoin(){
     <button class="primary wide" style="margin-top:13px" id="joinBtn">들어가기</button>
     <p class="muted center" style="margin:12px 0 0">
       ${CONFIG.API_URL? '두 사람이 같은 방에 들어옵니다.' : '서버가 없어 이 기기에만 저장됩니다.'}</p>
-  </div>`;
+  </div>
+  ${접속오류?`
+  <div class="card" style="border:3px solid var(--red);border-radius:16px">
+    <div class="jua">들어가지 못했습니다</div>
+    <p class="muted" style="margin-top:2px;word-break:break-all">${esc(접속오류.msg)}</p>
+    <button class="primary wide" style="margin-top:12px" id="retry">다시 해보기</button>
+    <button class="wide" style="margin-top:9px" id="alone">서버 없이 이 폰에서만 시작</button>
+    <p class="muted" style="margin:11px 0 0;font-size:12px">
+      서버 없이 시작해도 사진과 답은 이 폰에 남습니다.
+      나중에 서버가 되면 그때 이어서 쓰시면 돼요.</p>
+  </div>`:''}
+  ${(S.names.A||S.names.B)?`
+  <div class="card">
+    <div class="jua">이미 들어와 있는 사람</div>
+    <p class="muted" style="margin-top:2px">
+      <b>같은 이름을 넣으면 그 자리로 돌아갑니다.</b> 기록도 그대로예요.<br>
+      다른 기기에서 들어간 자리를 쓰시려면 비우면 됩니다. 사진과 답은 안 지워져요.</p>
+    <div class="stack" style="margin-top:12px">
+      ${['A','B'].filter(k=>S.names[k]).map(k=>`
+        <div class="answer" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>${esc(S.names[k])}</span>
+          <button style="font-size:12.5px;padding:7px 13px" data-free="${k}">자리 비우기</button>
+        </div>`).join('')}
+    </div>
+  </div>`:''}`;
   const go=()=>join(el.querySelector('#nm').value.trim());
   el.querySelector('#joinBtn').addEventListener('click',go);
   el.querySelector('#nm').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  el.querySelectorAll('[data-free]').forEach(b=>
+    b.addEventListener('click',()=>자리비우기(b.dataset.free)));
+  const r=el.querySelector('#retry'), a=el.querySelector('#alone');
+  if(r) r.addEventListener('click',()=>{ const n=접속오류.name; 접속오류=null; join(n); });
+  if(a) a.addEventListener('click',()=>{ const n=접속오류.name; 접속오류=null; join(n,true); });
 }
-async function join(name){
-  if(!name) return toast('이름을 적어주세요');
+async function 자리비우기(k){
+  if(!confirm(S.names[k]+' 자리를 비웁니다. 사진과 답은 그대로 남아요. 계속할까요?')) return;
   if(CONFIG.API_URL){
+    try{ const r=await call('freeSeat',{seat:k}); S=hydrate(r.state); 기기저장(); }
+    catch(e){ return toast(e.message); }
+  }else{
+    S.names[k]=''; save();
+  }
+  render(); toast('자리를 비웠습니다');
+}
+let 접속오류=null;
+async function join(name, 서버없이){
+  if(!name) return toast('이름을 적어주세요');
+  if(CONFIG.API_URL && !서버없이){
     toast('들어가는 중…');
     try{
       const r=await call('join',{name});
-      S=hydrate(r.state); me=r.seat;
-    }catch(e){ return toast(e.message); }
+      if(!r || !r.seat) throw new Error('서버가 자리를 주지 않았습니다');
+      S=hydrate(r.state); me=r.seat; 접속오류=null;
+    }catch(e){ 접속오류={ msg:e.message, name }; render(); return; }
   }else{
     const n=S.names;
     const seat = n.A===name?'A' : n.B===name?'B' : !n.A?'A' : !n.B?'B' : null;
@@ -939,8 +1059,9 @@ function screenWait(){
   </div>
   <div class="card center">
     <div class="dots"><i></i><i></i><i></i></div>
-    <p class="muted" style="margin:0">상대가 같은 주소로 들어와서 이름을 적으면 됩니다.</p>
-    <button class="wide" style="margin-top:16px" id="skip">혼자 먼저 둘러보기</button>
+    <p class="muted" style="margin:0">상대가 같은 주소로 들어와서 이름을 적으면 됩니다.<br>
+      <b>지금 바로 시작해도 됩니다.</b> 상대는 나중에 들어와도 이어져요.</p>
+    <button class="primary wide" style="margin-top:16px" id="skip">혼자 먼저 시작하기</button>
     <button class="wide" style="margin-top:9px" id="out">나가기</button>
   </div>`;
   el.querySelector('#skip').addEventListener('click',()=>{ skipWait=true; render(); });
@@ -1201,7 +1322,7 @@ function queue(){
   S.customQ.forEach(q=>out.push({id:q.id,kind:'free',text:q.q,truth:q.a,by:q.by,from:placeOf(q.slot)}));
   S.aiQ.forEach((q,i)=>out.push({id:'ai'+i,kind:'choice',text:q.q,choices:q.choices,truth:q.answer,from:placeOf('balhae')}));
   const day1=TRIP.filter(t=>t.day===1).map(t=>t.id);
-  const pool=S.photos.filter(p=>day1.includes(p.slot));
+  const pool=산사진().filter(p=>day1.includes(p.slot));
   shuffle(pool,CONFIG.TRIP_DATE+'blur').slice(0,2).forEach((p,i)=>out.push({
     id:'ph'+i,kind:'photo',text:'이 사진, 어디서 찍었게?',photo:p,truth:placeOf(p.slot),from:'가려진 사진'}));
   if(S.beers.names.A&&S.beers.names.B) out.push({id:'beer',kind:'beer',from:'양조장'});
@@ -1220,9 +1341,9 @@ const ansOf = qid => S.show.ans[qid]||{};
 function 점수(){
   const sc={A:0,B:0};
   Object.keys(S.show.graded||{}).forEach(k=>{
-    const g=S.show.graded[k];
-    if(g==='both'){ sc.A++; sc.B++; }
-    else if(g==='A'||g==='B') sc[g]++;
+    const g=S.show.graded[k], pt=점수몫(k);
+    if(g==='both'){ sc.A+=pt; sc.B+=pt; }
+    else if(g==='A'||g==='B') sc[g]+=pt;
   });
   return sc;
 }
@@ -1258,7 +1379,9 @@ function vShow(){
     const n=S.beers.names, v=S.beers.verdict;
     // 심사 결과가 있는데 점수가 안 매겨졌으면(동기화로 넘어온 경우 등) 여기서 매깁니다
     if(v && !S.show.graded.beer) setTimeout(()=>grade('beer', v.order[v.winner]),0);
-    h+=`<div class="qbox"><div class="qt">어느 쪽이 더 그럴듯한 맥주 이름일까</div>
+    h+=`<div class="qbox">
+      <div style="margin-bottom:8px"><span class="tag red">${점수몫('beer')}점</span></div>
+      <div class="qt">어느 쪽이 더 그럴듯한 맥주 이름일까</div>
       <div class="stack">
         <div class="answer"><b>1번</b><div>${esc(n.A)}</div></div>
         <div class="answer"><b>2번</b><div>${esc(n.B)}</div></div></div>`;
@@ -1340,9 +1463,10 @@ function gradeRow(q, truth, ans, need){
   }
 
   /* 결과 */
+  const pt=점수몫(q.id);
   const 문구 = g==='none' ? '둘 다 아쉽습니다'
-             : g==='both' ? '둘 다 정답 🎉  +1'
-             : esc(nameOf(g))+' 정답  +1';
+             : g==='both' ? '둘 다 정답 🎉  +'+pt
+             : esc(nameOf(g))+' 정답  +'+pt;
   let h=`<p class="center jua" style="font-size:19px;margin:16px 0 0">${문구}</p>`;
 
   /* 판정이 마음에 안 들 때만 펼칩니다 */
@@ -1422,36 +1546,64 @@ function vColor(){
     </div>
     <button class="primary wide" data-run="drawColor">🎲 내 색 뽑기</button>
   </div>`;
-  const cs=colorShots(me), mid=midShot(me);
-  const left=CELLS-cs.length;
-  return `<div class="card">
+
+  칸번호채우기();
+  const 칸=칸배치(me), mid=midShot(me);
+  const 빈칸=칸.filter(x=>!x).length;
+  const 고름=peek.칸, 고른사진=Number.isInteger(고름)? 칸[고름] : null;
+
+  let h=`<div class="card">
     <div class="chip"><span class="swatch" style="background:${col.hex}"></span>
       <span class="big">내 색은 ${col.name}</span></div>
     <p class="muted" style="margin-top:0">
-      이 색이 들어간 걸 찾아 찍으세요. 어디서 몇 시에 찍든 상관없습니다.
-      한 곳에서 여덟 장을 다 채워도 되고, 하루 종일 나눠 담아도 돼요.</p>
-    <p class="center jua" style="font-size:18px;margin:15px 0">
-      ${left>0? left+'칸 남았습니다' : '여덟 칸 다 찼습니다 ✓'}</p>
-    <button class="primary wide" ${left>0?'':'disabled'} data-run="shotColor">
-      📷 ${col.name} 찾아 찍기</button>
-    ${cs.length===0?`<button class="wide" style="margin-top:9px" data-run="redrawColor">
-      🎲 다른 색으로 다시 뽑기</button>`:''}
-    ${cs.length? `<button class="wide" style="margin-top:9px" data-run="undoColor">방금 것 빼기</button>`:''}
-  </div>
+      ${빈칸? '판에서 채울 칸을 누르세요. 어디서 몇 시에 찍든 자유입니다.'
+            : '여덟 칸이 다 찼습니다. 바꾸고 싶은 칸을 누르면 다시 넣을 수 있어요.'}</p>
+    <div style="margin:15px 0">${boardHtml(me,{tap:true})}</div>`;
+
+  if(Number.isInteger(고름)){
+    h+=`<div class="answer" style="margin-bottom:11px"><b>${고름+1}번 칸</b>
+      <div>${고른사진? '이미 사진이 있습니다. 새로 넣으면 갈아 끼워집니다.' : '비어 있습니다.'}</div></div>
+      <button class="primary wide" data-run="칸찍기" data-a="${고름}">
+        📷 ${고른사진?'이 칸 다시 넣기':'이 칸에 넣기'}</button>
+      ${고른사진?`<button class="wide" style="margin-top:9px" data-run="칸비우기" data-a="${고름}">이 칸 비우기</button>`:''}
+      <button class="wide" style="margin-top:9px" data-run="칸취소">그만두기</button>`;
+  }else{
+    h+=`<p class="center jua" style="font-size:17px;margin:0 0 12px">
+      ${빈칸? 빈칸+'칸 남았습니다' : '여덟 칸 다 찼습니다 ✓'}</p>
+      ${빈칸?`<button class="primary wide" data-run="다음칸찍기">📷 빈 칸부터 채우기</button>`:''}
+      <button class="wide" style="margin-top:9px" data-run="색전부지우기">🎲 전부 지우고 색 다시 뽑기</button>`;
+  }
+  h+=`</div>
   <div class="card"><div class="jua">가운데 한 칸</div>
     <p class="muted" style="margin-top:2px">${esc(nameOf(other()))}를 찍어주세요. 판 한가운데에 들어갑니다.</p>
     ${mid?`<div style="max-width:170px;margin:13px auto 0">
       <div class="cell mid" style="border-radius:6px"><img src="${src(mid)}" alt=""></div></div>`:''}
     <button class="green wide" style="margin-top:13px" data-run="shotMid">
-      📷 ${mid?'다시 찍기':esc(nameOf(other()))+' 찍기'}</button></div>
-  <div class="card"><div class="jua" style="margin-bottom:11px">내 판</div>
-    ${boardHtml(me)}
-    <p class="muted center" style="margin-bottom:0">상대 판은 귀가길에 함께 열립니다.</p></div>`;
+      📷 ${mid?'다시 찍기':esc(nameOf(other()))+' 찍기'}</button>
+    <p class="muted center" style="margin:11px 0 0">상대 판은 귀가길에 함께 열립니다.</p></div>`;
+  return h;
 }
-function undoColor(){
-  const cs=colorShots(me); if(!cs.length) return;
-  const last=cs[cs.length-1];
-  S.photos=S.photos.filter(p=>p.id!==last.id); save(); render(); toast('한 칸 비웠습니다');
+function 칸누름(i){ i=Number(i); peek.칸 = (peek.칸===i? null : i); render(); }
+function 칸취소(){ peek.칸=null; render(); }
+function 칸가운데(){ shotMid(); }
+function 칸찍기(i){ i=Number(i); peek.칸=null; pickSquare({slot:'color', mission:'color', cell:i}); }
+function 다음칸찍기(){
+  const i=칸배치(me).indexOf(null);
+  if(i<0) return toast('빈 칸이 없습니다');
+  칸찍기(i);
+}
+function 칸비우기(i){
+  const p=칸배치(me)[Number(i)];
+  if(!p) return;
+  사진지우기(p); peek.칸=null; save(); render(); toast((Number(i)+1)+'번 칸을 비웠습니다');
+}
+function 색전부지우기(){
+  const cs=colorShots(me);
+  if(!cs.length && !myColor(me)) return;
+  if(!confirm('모은 사진 '+cs.length+'장을 지우고 색을 새로 뽑습니다. 계속할까요?')) return;
+  cs.forEach(사진지우기);
+  S.colors[me]=null;
+  save(); render(); toast('색을 새로 뽑아주세요');
 }
 function shotColor(){ pickSquare({slot:'color', mission:'color'}); }
 function shotMid(){   pickSquare({slot:'color', mission:'mid'  }); }
@@ -1516,7 +1668,7 @@ function vFinale(){
 
   /* 열린 뒤 */
   let h=`<div class="label center"><div class="jua" style="font-size:20px">우리가 모은 것</div>
-    <p class="muted" style="margin:5px 0 0">사진 ${S.photos.length}장 · 퀴즈 ${sc.A} 대 ${sc.B}</p></div>`;
+    <p class="muted" style="margin:5px 0 0">사진 ${산사진().length}장 · 퀴즈 ${sc.A} 대 ${sc.B}</p></div>`;
 
   h+=['A','B'].map(k=>`<div class="card">
     <div class="jua" style="margin-bottom:11px">
@@ -1536,7 +1688,7 @@ function vFinale(){
       </div></div>`;
   }).join('');
 
-  const yours=S.photos.filter(p=>p.by===other()), picked=S.finale.best[me];
+  const yours=산사진().filter(p=>p.by===other()), picked=S.finale.best[me];
   h+=`<div class="card"><div class="jua">${esc(nameOf(other()))}의 사진 중 베스트</div>
     <p class="muted" style="margin-top:2px">한 장 고르고 제목을 붙여주세요.</p>
     <div class="shots">${yours.length? yours.map(p=>
@@ -1561,7 +1713,7 @@ function vFinale(){
     <button class="wide" style="margin-top:9px" onclick="window.print()">인쇄해서 저장</button>
   </div>`;
 
-  const pool=shuffle(S.photos.slice(),CONFIG.TRIP_DATE+'order').slice(0,8);
+  const pool=shuffle(산사진(),CONFIG.TRIP_DATE+'order').slice(0,8);
   if(pool.length>=3){
     h+=`<div class="card"><div class="jua">시간순 맞히기</div>
       <p class="muted" style="margin-top:2px">찍은 순서대로 눌러주세요.</p>
@@ -1605,7 +1757,7 @@ function tapOrder(id){
 }
 function resetOrder(){ peek.order=[]; S.finale.orderScore=null; save(); render(); }
 function gradeOrder(){
-  const chosen=(peek.order||[]).map(id=>S.photos.find(p=>p.id===id)).filter(Boolean);
+  const chosen=(peek.order||[]).map(id=>산사진().find(p=>p.id===id)).filter(Boolean);
   if(chosen.length<2) return toast('두 장 이상 골라주세요');
   const truth=chosen.slice().sort((a,b)=>a.ts-b.ts);
   S.finale.orderScore=chosen.filter((p,i)=>truth[i].id===p.id).length;
@@ -1639,7 +1791,7 @@ function screenAlbum(){
 function screenMe(){
   return `<div class="card">
     <div class="jua" style="font-size:19px">${esc(nameOf(me))}</div>
-    <p class="muted">내 사진 ${S.photos.filter(p=>p.by===me).length}장 ·
+    <p class="muted">내 사진 ${산사진().filter(p=>p.by===me).length}장 ·
       내가 낸 문제 ${S.customQ.filter(q=>q.by===me).length}개</p>
     <p class="muted">함께: ${esc(nameOf(other()))||'아직 없음'}</p>
     <p class="muted">${CONFIG.API_URL?(online?'연결됨':'오프라인 — 임시 저장 중'):'서버 없음 — 이 기기에만'}
@@ -1648,7 +1800,7 @@ function screenMe(){
       <div class="answer"><b>${esc(nameOf(other()))} 접속</b>
         <div>${S.seen&&S.seen[other()] ? 지난시간(S.seen[other()])+' 전' : '아직 기록 없음'}</div></div>
       <div class="answer"><b>상대가 모은 것</b>
-        <div>사진 ${S.photos.filter(p=>p.by===other()).length}장 ·
+        <div>사진 ${산사진().filter(p=>p.by===other()).length}장 ·
              색 ${colorShots(other()).length}/${CELLS}칸 ·
              문제 ${S.customQ.filter(q=>q.by===other()).length}개</div></div>
       ${저장실패?`<div class="answer" style="border-color:var(--red);border-style:solid">
@@ -1658,7 +1810,7 @@ function screenMe(){
       <div class="answer"><b>자동으로</b>
         <div>입력할 때마다 올리고, 4초마다 받아옵니다</div></div>
       <div class="answer"><b>사진 올리기</b>
-        <div>${S.photos.filter(p=>!p.url).length? S.photos.filter(p=>!p.url).length+'장 대기 중':'전부 올렸습니다'}</div></div>
+        <div>${산사진().filter(p=>!p.fileId&&!p.url).length? 산사진().filter(p=>!p.fileId&&!p.url).length+'장 대기 중':'전부 올렸습니다'}</div></div>
     </div>
     <button class="wide" style="margin-top:11px" data-run="지금동기화">🔄 지금 주고받기</button>
     <button class="wide" style="margin-top:8px" data-run="leave">나가기</button>
