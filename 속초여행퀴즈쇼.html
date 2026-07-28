@@ -352,7 +352,7 @@ window.__reset = function () {
    0. 설정
    ═══════════════════════════════════════════════ */
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbz2bPUmXTWt4BcwQzjNl5HuD-K5e8MYNSd4adNGTUYOXeTcx3lfz7M-ObKiLkMgI3Fo/exec',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
+  API_URL: '',            // Apps Script 웹앱 URL. 비우면 이 기기에만 저장됩니다.
   USE_DUMMY: false,       // 실전. true 로 두면 테스트 문항만 나옵니다.
   TRIP_DATE: '2026-08-15',
   // 사진을 어디서 가져올지: 'both' 촬영+앨범 · 'album' 앨범만 · 'camera' 촬영만
@@ -513,6 +513,13 @@ function 사진보관(id,dataUrl,기기에도){
   if(기기에도 && !store.set('b:'+id, dataUrl)) 저장실패=true;
 }
 function 사진버리기(id){ delete blobs[id]; store.del('b:'+id); }
+
+/* 목록에서 없애면 동기화 때 상대 기기에서 되살아납니다.
+   그래서 지웠다는 표시를 남깁니다. */
+function 사진지우기(p){
+  if(!p || p.del) return;
+  p.del=Date.now(); delete p.local; 사진버리기(p.id);
+}
 function 사진불러오기(){
   store.keys().forEach(k=>{ if(k && k.indexOf('b:')===0) blobs[k.slice(2)]=store.get(k); });
 }
