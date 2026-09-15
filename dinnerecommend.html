@@ -5,146 +5,452 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>오늘 저녁 뭐 먹지?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
   :root{
-    --cream:#FAF3E7;
-    --cream-deep:#F0E6D4;
-    --sage:#9CB380;
-    --peach:#F4C284;
-    --coral:#E8927C;
-    --ink:#4A4238;
-    --ink-soft:#8A7F6E;
-    --shadow-raise: 6px 6px 14px rgba(180,160,130,0.35), -6px -6px 14px rgba(255,255,255,0.9);
-    --shadow-inset: inset 4px 4px 8px rgba(180,160,130,0.35), inset -4px -4px 8px rgba(255,255,255,0.85);
+    --sky-1:#C3D8EC;
+    --sky-2:#D8E6F2;
+    --sky-3:#EAF2F8;
+    --cloud:#EFF3F2;
+    --star:#E8CE7A;
+    --field:#8CA860;
+    --field-deep:#5E7C45;
+    --poppy:#C75B42;
+    --daisy:#FBF7EC;
+    --sun:#E3B53F;
+    --paper:#E9D9BE;
+    --paper-deep:#DCC8A6;
+    --paper-edge:#FBF6EC;
+    --ink:#4A4436;
+    --ink-soft:#8B8271;
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
   body{
-    margin:0; min-height:100vh; background:var(--cream);
-    font-family:'Gowun Dodum', sans-serif; color:var(--ink);
-    display:flex; justify-content:center; padding:28px 16px 60px;
-  }
-  .app{ width:100%; max-width:480px; }
-  h1{
-    font-family:'Jua', sans-serif; font-size:1.9rem; margin:0 0 4px;
-    text-align:center; color:var(--ink);
-  }
-  .sub{ text-align:center; color:var(--ink-soft); font-size:0.92rem; margin-bottom:24px; }
-
-  .card{
-    background:var(--cream); border-radius:24px; padding:20px;
-    box-shadow:var(--shadow-raise); margin-bottom:20px;
-  }
-  .card h2{
-    font-family:'Jua', sans-serif; font-size:1.1rem; margin:0 0 14px; color:var(--ink);
-  }
-
-  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
-  .chip{
-    padding:9px 16px; border-radius:16px; background:var(--cream);
-    box-shadow:var(--shadow-raise); font-size:0.9rem; cursor:pointer;
-    border:none; color:var(--ink); transition:transform .12s ease, box-shadow .12s ease;
+    min-height:100vh;
     font-family:'Gowun Dodum', sans-serif;
+    color:var(--ink);
+    display:flex; justify-content:center;
+    padding:26px 14px 80px;
+    overflow-x:hidden;
+    background:#D2E2F0;
   }
-  .chip:active{ transform:scale(0.96); box-shadow:var(--shadow-inset); }
-  .chip.on{ background:var(--sage); color:#fff; box-shadow:var(--shadow-inset); }
-  .chip.ingredient.on{ background:var(--peach); color:var(--ink); }
 
-  .add-row{ display:flex; gap:8px; margin-top:14px; }
+  /* ===== 고흐 하늘 (붓터치 레이어) ===== */
+  .sky{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 120px 60px at 18% 12%, rgba(243,247,246,.92), transparent 66%),
+      radial-gradient(ellipse 90px 46px at 72% 8%,  rgba(243,247,246,.82), transparent 66%),
+      radial-gradient(ellipse 140px 70px at 88% 30%, rgba(243,247,246,.78), transparent 66%),
+      radial-gradient(ellipse 110px 55px at 30% 42%, rgba(243,247,246,.72), transparent 66%),
+      radial-gradient(circle 26px at 62% 6%,  rgba(247,226,155,.9), transparent 74%),
+      radial-gradient(circle 18px at 24% 26%, rgba(247,226,155,.7), transparent 76%),
+      radial-gradient(circle 15px at 84% 52%, rgba(247,226,155,.6), transparent 76%),
+      repeating-linear-gradient(112deg,
+        rgba(255,255,255,.26) 0 5px,
+        rgba(150,180,212,.20) 5px 12px,
+        rgba(255,255,255,.12) 12px 19px),
+      repeating-linear-gradient(68deg,
+        rgba(255,255,255,.18) 0 6px,
+        rgba(144,176,210,.18) 6px 15px),
+      repeating-linear-gradient(94deg,
+        rgba(255,255,255,.22) 0 9px,
+        transparent 9px 22px),
+      linear-gradient(178deg, var(--sky-1) 0%, var(--sky-2) 46%, var(--sky-3) 100%);
+  }
+  /* 소용돌이 */
+  .swirl{
+    position:fixed; z-index:0; pointer-events:none; border-radius:50%;
+    background:
+      conic-gradient(from 0deg,
+        rgba(248,252,255,.95) 0deg, rgba(255,255,255,0) 85deg,
+        rgba(240,248,255,.8) 175deg, rgba(255,255,255,0) 265deg,
+        rgba(248,252,255,.9) 360deg);
+    mask: radial-gradient(circle, transparent 0 16%, #000 22% 52%, transparent 60%);
+    -webkit-mask: radial-gradient(circle, transparent 0 16%, #000 22% 52%, transparent 60%);
+    opacity:.62;
+  }
+  .swirl.s1{ width:280px; height:280px; top:16%; right:-80px; }
+  .swirl.s2{ width:170px; height:170px; top:46%; left:-55px; transform:rotate(140deg); }
+  .swirl.s3{ width:130px; height:130px; top:70%; right:-30px; transform:rotate(60deg); }
+
+  /* ===== 꽃밭 (하단 고정) ===== */
+  .field{
+    position:fixed; left:0; right:0; bottom:0; height:120px; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(circle 4px at 8%  62%, var(--daisy) 0 45%, transparent 50%),
+      radial-gradient(circle 5px at 18% 78%, #D9643F 0 45%, transparent 50%),
+      radial-gradient(circle 4px at 27% 58%, #E8B53F 0 45%, transparent 50%),
+      radial-gradient(circle 5px at 38% 82%, var(--daisy) 0 45%, transparent 50%),
+      radial-gradient(circle 4px at 47% 64%, #D9643F 0 45%, transparent 50%),
+      radial-gradient(circle 5px at 57% 76%, #E8B53F 0 45%, transparent 50%),
+      radial-gradient(circle 4px at 66% 56%, var(--daisy) 0 45%, transparent 50%),
+      radial-gradient(circle 5px at 76% 80%, #D9643F 0 45%, transparent 50%),
+      radial-gradient(circle 4px at 85% 62%, #E8B53F 0 45%, transparent 50%),
+      radial-gradient(circle 5px at 94% 74%, var(--daisy) 0 45%, transparent 50%),
+      repeating-linear-gradient(86deg,
+        rgba(94,124,69,.75) 0 3px, transparent 3px 7px),
+      repeating-linear-gradient(95deg,
+        rgba(170,196,120,.4) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, transparent 0%, rgba(140,168,96,.8) 18%, var(--field) 50%, var(--field-deep) 100%);
+  }
+  .treeline{
+    position:fixed; left:0; right:0; bottom:104px; height:34px; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 30px 20px at 6%  100%, #3E5B34 0 70%, transparent 72%),
+      radial-gradient(ellipse 26px 17px at 17% 100%, #46663A 0 70%, transparent 72%),
+      radial-gradient(ellipse 34px 22px at 29% 100%, #3E5B34 0 70%, transparent 72%),
+      radial-gradient(ellipse 24px 16px at 41% 100%, #46663A 0 70%, transparent 72%),
+      radial-gradient(ellipse 32px 21px at 54% 100%, #3E5B34 0 70%, transparent 72%),
+      radial-gradient(ellipse 27px 18px at 67% 100%, #46663A 0 70%, transparent 72%),
+      radial-gradient(ellipse 33px 22px at 80% 100%, #3E5B34 0 70%, transparent 72%),
+      radial-gradient(ellipse 28px 19px at 93% 100%, #46663A 0 70%, transparent 72%);
+  }
+
+  .app{ width:100%; max-width:470px; position:relative; z-index:2; }
+
+  /* ===== 헤더 ===== */
+  header{ text-align:center; margin-bottom:24px; }
+  h1{
+    font-family:'Jua', sans-serif; font-size:1.95rem; font-weight:400;
+    margin:0; color:#FDFBF4; line-height:1.3;
+    text-shadow:0 2px 6px rgba(40,60,90,.45);
+  }
+  .sub{
+    font-size:0.86rem; color:#EAF1F6; margin-top:7px;
+    text-shadow:0 1px 4px rgba(40,60,90,.5);
+  }
+
+  /* ===== 찢은 종이 카드 ===== */
+  .card{ position:relative; margin-bottom:26px; padding:20px 18px; }
+  .card::before{
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 24% 28%, rgba(255,255,255,.4) 0 1px, transparent 2px),
+      radial-gradient(circle at 68% 62%, rgba(160,135,95,.16) 0 1.5px, transparent 3px),
+      radial-gradient(circle at 42% 78%, rgba(160,135,95,.12) 0 1px, transparent 2px),
+      linear-gradient(162deg, #F0E3CC 0%, var(--paper) 58%, var(--paper-deep) 100%);
+    border:7px solid var(--paper-edge);
+    border-radius:4px;
+    filter:url(#tornEdge);
+    box-shadow:0 6px 16px rgba(35,55,80,.24);
+  }
+  .card > *{ position:relative; z-index:1; }
+  .card:nth-of-type(odd){ transform:rotate(-0.5deg); }
+  .card:nth-of-type(even){ transform:rotate(0.45deg); }
+
+  .card h2{
+    font-family:'Jua', sans-serif; font-weight:400; font-size:1.12rem;
+    margin:0 0 13px; color:var(--ink);
+    display:flex; align-items:center; gap:7px;
+  }
+
+  /* ===== 샌드위치 일러스트 (유화 질감) ===== */
+  .sandwich{
+    width:150px; height:96px; margin:0 auto 12px; position:relative;
+    filter:drop-shadow(0 5px 12px rgba(30,50,80,.35));
+  }
+  .sandwich .layer{ position:absolute; left:0; right:0; }
+  .sl-bread-top{
+    top:0; height:42px;
+    background:
+      repeating-linear-gradient(104deg, rgba(255,255,255,.3) 0 3px, rgba(180,140,85,.22) 3px 8px),
+      radial-gradient(circle at 30% 55%, rgba(255,250,235,.55) 0 4px, transparent 5px),
+      radial-gradient(circle at 62% 42%, rgba(255,250,235,.5) 0 3px, transparent 4px),
+      linear-gradient(170deg, #F2D9A6 0%, #E3BE7E 70%, #CFA45F 100%);
+    border:4px solid #FBF6EC;
+    border-radius:60px 60px 10px 10px;
+    filter:url(#tornEdge);
+  }
+  .sl-lettuce{
+    top:36px; height:18px; left:-6px; right:-6px;
+    background:
+      repeating-linear-gradient(88deg, rgba(255,255,255,.28) 0 3px, transparent 3px 7px),
+      linear-gradient(170deg, #9EC06B, #5E7C45);
+    border-radius:50% 50% 45% 55% / 70% 60% 50% 50%;
+    filter:url(#tornEdge);
+  }
+  .sl-tomato{
+    top:48px; height:15px; left:2px; right:2px;
+    background:
+      repeating-linear-gradient(96deg, rgba(255,255,255,.22) 0 2px, transparent 2px 6px),
+      linear-gradient(170deg, #D9694C, #A1442F);
+    border-radius:40% 45% 40% 45% / 60% 60% 50% 50%;
+    filter:url(#tornEdge);
+  }
+  .sl-cheese{
+    top:58px; height:14px; left:-2px; right:-2px;
+    background:
+      repeating-linear-gradient(100deg, rgba(255,255,255,.3) 0 2px, transparent 2px 7px),
+      linear-gradient(170deg, #F0CE72, #D9AE43);
+    border-radius:4px;
+    filter:url(#tornEdge);
+  }
+  .sl-bread-bot{
+    top:66px; height:30px;
+    background:
+      repeating-linear-gradient(104deg, rgba(255,255,255,.28) 0 3px, rgba(180,140,85,.24) 3px 8px),
+      linear-gradient(170deg, #E9CC94 0%, #D2A863 100%);
+    border:4px solid #FBF6EC;
+    border-radius:10px 10px 40px 40px;
+    filter:url(#tornEdge);
+  }
+
+  /* 카드 모서리 재료 스티커 */
+  .corner{ position:absolute; z-index:3; filter:drop-shadow(0 3px 7px rgba(30,50,80,.3)); }
+  .corner i{
+    display:block; width:100%; height:100%;
+    border:3px solid #FBF6EC;
+    filter:url(#tornEdge);
+  }
+  .c-tomato i{
+    border-radius:50%;
+    background:
+      radial-gradient(circle, #F6EFE4 0 12%, transparent 13%),
+      radial-gradient(circle at 32% 36%, #E08C74 0 15%, transparent 16%),
+      radial-gradient(circle at 70% 38%, #E08C74 0 15%, transparent 16%),
+      radial-gradient(circle at 50% 74%, #E08C74 0 15%, transparent 16%),
+      repeating-linear-gradient(100deg, rgba(255,255,255,.2) 0 2px, transparent 2px 6px),
+      radial-gradient(circle, #C75B42 0 74%, #A1442F 75%);
+  }
+  .c-cucumber i{
+    border-radius:50%;
+    background:
+      radial-gradient(circle, #EDF2DF 0 22%, transparent 23%),
+      repeating-linear-gradient(94deg, rgba(255,255,255,.22) 0 2px, transparent 2px 6px),
+      radial-gradient(circle, #C4D69B 0 60%, #8CA860 61%, #5E7C45 100%);
+  }
+  .c-lettuce i{
+    border-radius:52% 48% 60% 40% / 55% 60% 40% 45%;
+    background:
+      repeating-linear-gradient(88deg, rgba(255,255,255,.26) 0 3px, transparent 3px 7px),
+      radial-gradient(circle at 40% 38%, #A8C476 0 45%, #5E7C45 100%);
+  }
+  .c-cheese i{
+    border-radius:5px;
+    background:
+      repeating-linear-gradient(100deg, rgba(255,255,255,.28) 0 2px, transparent 2px 7px),
+      linear-gradient(160deg, #F0CE72, #D9AE43);
+  }
+  .c-tl{ top:-20px; left:-16px; }
+  .c-tr{ top:-22px; right:-14px; }
+  .c-br{ bottom:-20px; right:-18px; }
+  .c-bl{ bottom:-18px; left:-16px; }
+
+  /* ===== 칩 ===== */
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    font-family:'Gowun Dodum', sans-serif; font-size:0.85rem;
+    padding:7px 14px; border-radius:16px;
+    background:#FBF6EA; color:var(--ink);
+    border:1.5px solid #CBB894; cursor:pointer;
+    box-shadow:0 2px 0 rgba(150,125,90,.3);
+    transition:transform .1s ease, box-shadow .1s ease;
+    line-height:1.4;
+  }
+  .chip:hover{ transform:translateY(-1px); }
+  .chip:active{ transform:translateY(2px); box-shadow:0 0 0 rgba(0,0,0,0); }
+  .chip.on{
+    background:var(--field); color:#FDFBF4; border-color:var(--field-deep);
+    box-shadow:0 2px 0 var(--field-deep);
+  }
+  .chip.ingredient.on{
+    background:var(--poppy); color:#FDFBF4; border-color:#A1442F;
+    box-shadow:0 2px 0 #A1442F;
+  }
+
+  /* ===== 입력 ===== */
+  .add-row{ display:flex; gap:7px; margin-top:14px; width:100%; }
   .add-row input{
-    flex:1; border:none; border-radius:14px; padding:10px 14px;
-    background:var(--cream-deep); box-shadow:var(--shadow-inset);
-    font-family:'Gowun Dodum', sans-serif; font-size:0.9rem; color:var(--ink);
+    flex:1 1 auto; min-width:0;
+    border:1.5px dashed #CBB894; border-radius:12px;
+    padding:8px 12px; background:rgba(255,253,246,.8);
+    font-family:'Gowun Dodum', sans-serif; font-size:0.87rem; color:var(--ink);
   }
-  .add-row input:focus{ outline:2px solid var(--sage); }
+  .add-row input::placeholder{ color:#B4A68D; }
+  .add-row input:focus{ outline:none; border-color:var(--poppy); border-style:solid; }
   .btn-small{
-    border:none; border-radius:14px; padding:10px 16px; background:var(--sage);
-    color:#fff; font-family:'Jua', sans-serif; font-size:0.85rem; cursor:pointer;
-    box-shadow:var(--shadow-raise);
+    flex:0 0 auto; border:1.5px solid #A1442F; border-radius:12px;
+    padding:8px 14px; background:var(--poppy); color:#FDFBF4;
+    font-family:'Jua', sans-serif; font-size:0.87rem;
+    cursor:pointer; box-shadow:0 2px 0 #A1442F; white-space:nowrap;
   }
-  .btn-small:active{ box-shadow:var(--shadow-inset); transform:scale(0.97); }
+  .btn-small:active{ transform:translateY(2px); box-shadow:0 0 0; }
 
-  .sync-row{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
-  .sync-status{ font-size:0.78rem; color:var(--ink-soft); }
-  .link-btn{ background:none; border:none; color:var(--ink-soft); font-size:0.78rem; text-decoration:underline; cursor:pointer; }
-
-  .cta{
-    width:100%; border:none; border-radius:20px; padding:18px;
-    background:var(--coral); color:#fff; font-family:'Jua', sans-serif;
-    font-size:1.15rem; cursor:pointer; box-shadow:var(--shadow-raise);
-    transition:transform .12s ease;
+  .sync-row{ display:flex; justify-content:space-between; align-items:center; margin-top:13px; gap:8px; }
+  .sync-status{ font-size:0.76rem; color:var(--ink-soft); }
+  .link-btn{
+    background:none; border:none; color:var(--ink-soft);
+    font-family:'Gowun Dodum', sans-serif; font-size:0.76rem;
+    text-decoration:underline; cursor:pointer; padding:0;
   }
-  .cta:active{ transform:scale(0.97); box-shadow:var(--shadow-inset); }
-  .cta:disabled{ opacity:0.6; }
 
-  .result-card{
-    background:var(--cream); border-radius:20px; padding:18px; margin-top:14px;
-    box-shadow:var(--shadow-raise);
-  }
-  .result-card h3{ font-family:'Jua', sans-serif; margin:0 0 6px; color:var(--ink); font-size:1.05rem; }
-  .result-card p{ margin:4px 0; font-size:0.9rem; line-height:1.5; color:var(--ink); }
-  .missing{ font-size:0.82rem; color:var(--coral); margin-top:6px; }
-
-  .empty{ text-align:center; color:var(--ink-soft); font-size:0.88rem; padding:10px 0; }
-
-  .settings-panel{ display:none; }
+  .settings-panel{ display:none; margin-top:13px; padding-top:13px; border-top:1.5px dashed #CBB894; }
   .settings-panel.open{ display:block; }
   .settings-panel input{
-    width:100%; border:none; border-radius:14px; padding:10px 14px;
-    background:var(--cream-deep); box-shadow:var(--shadow-inset);
-    font-size:0.85rem; margin-bottom:10px; font-family:'Gowun Dodum', sans-serif;
+    width:100%; border:1.5px dashed #CBB894; border-radius:12px;
+    padding:8px 12px; background:rgba(255,253,246,.8); margin-bottom:8px;
+    font-family:'Gowun Dodum', sans-serif; font-size:0.83rem; color:var(--ink);
   }
-  .settings-hint{ font-size:0.78rem; color:var(--ink-soft); line-height:1.5; }
+  .settings-hint{ font-size:0.78rem; color:var(--ink-soft); line-height:1.6; }
+
+  /* ===== 상황 그룹 ===== */
+  .situation-group{ margin-bottom:14px; }
+  .situation-group:last-child{ margin-bottom:0; }
+  .group-label{ font-size:0.75rem; color:var(--ink-soft); margin-bottom:5px; padding-left:2px; }
+
+  /* ===== 메인 버튼 ===== */
+  .cta{
+    width:100%; border:none; border-radius:0;
+    padding:16px; background:transparent; position:relative;
+    color:#FDFBF4; font-family:'Jua', sans-serif; font-size:1.15rem;
+    cursor:pointer; margin-bottom:6px;
+  }
+  .cta::before{
+    content:''; position:absolute; inset:0; z-index:0;
+    background:linear-gradient(160deg,#D06B4F,var(--poppy));
+    border:5px solid #FBF6EC; border-radius:4px;
+    filter:url(#tornEdge);
+    box-shadow:0 6px 16px rgba(35,55,80,.26);
+  }
+  .cta span{ position:relative; z-index:1; text-shadow:0 1px 3px rgba(90,40,25,.4); }
+  .cta:active{ transform:translateY(3px); }
+  .cta:disabled{ opacity:.7; }
+
+  /* ===== 결과 ===== */
+  #results{ margin-top:20px; }
+  .result-card{ position:relative; margin-bottom:22px; padding:17px 16px; }
+  .result-card::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(162deg,#F3E9D6,var(--paper));
+    border:6px solid var(--paper-edge); border-radius:4px;
+    filter:url(#tornEdge);
+    box-shadow:0 5px 14px rgba(35,55,80,.2);
+  }
+  .result-card > *{ position:relative; z-index:1; }
+  .result-card:nth-child(odd){ transform:rotate(0.5deg); }
+  .result-card:nth-child(even){ transform:rotate(-0.45deg); }
+  .result-card h3{
+    font-family:'Jua', sans-serif; font-weight:400; font-size:1.12rem;
+    margin:0 0 6px; color:var(--ink);
+  }
+  .result-card p{ margin:3px 0; font-size:0.86rem; line-height:1.65; color:#655D4D; }
+  .missing{
+    font-size:0.79rem; margin-top:10px; padding-top:8px;
+    border-top:1.5px dashed rgba(170,145,105,.7); color:#A1442F;
+  }
+  .missing.ok{ color:var(--field-deep); }
+
+  .empty{
+    font-size:0.84rem; text-align:center; color:#EAF1F6;
+    padding:14px 0; text-shadow:0 1px 4px rgba(40,60,90,.5);
+  }
+  .empty.onpaper{ color:var(--ink-soft); text-shadow:none; }
+
+  .loading{
+    text-align:center; font-family:'Jua', sans-serif; font-size:0.98rem;
+    color:#FDFBF4; padding:22px 0; text-shadow:0 1px 4px rgba(40,60,90,.5);
+  }
+  .loading .dot{ display:inline-block; animation:bounce .6s infinite alternate; }
+  .loading .dot:nth-child(2){ animation-delay:.15s; }
+  .loading .dot:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce{ to{ transform:translateY(-6px); } }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="tornEdge">
+    <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="4" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="swirl s1" aria-hidden="true"></div>
+<div class="swirl s2" aria-hidden="true"></div>
+<div class="swirl s3" aria-hidden="true"></div>
+<div class="treeline" aria-hidden="true"></div>
+<div class="field" aria-hidden="true"></div>
+
 <div class="app">
-  <h1>오늘 저녁 뭐 먹지?</h1>
-  <div class="sub">집에 있는 재료랑 오늘 상황을 알려주면 메뉴를 골라드려요</div>
+  <header>
+    <div class="sandwich" aria-hidden="true">
+      <div class="layer sl-bread-top"></div>
+      <div class="layer sl-lettuce"></div>
+      <div class="layer sl-tomato"></div>
+      <div class="layer sl-cheese"></div>
+      <div class="layer sl-bread-bot"></div>
+    </div>
+    <h1>오늘 저녁 뭐 먹지?</h1>
+    <div class="sub">냉장고에 있는 재료랑 오늘 컨디션만 알려주세요</div>
+  </header>
 
   <div class="card">
+    <span class="corner c-lettuce c-tl" style="width:50px;height:44px;" aria-hidden="true"><i></i></span>
+    <span class="corner c-tomato c-tr" style="width:44px;height:44px;" aria-hidden="true"><i></i></span>
     <h2>🥬 냉장고 재료</h2>
     <div id="ingredientChips" class="chip-row"></div>
     <div class="add-row">
-      <input id="newIngredient" placeholder="재료 추가 (예: 두부)" />
-      <button class="btn-small" onclick="addIngredient()">추가</button>
+      <input id="newIngredient" placeholder="재료 적기 (예: 두부)" />
+      <button class="btn-small" onclick="addIngredient()">담기</button>
     </div>
     <div class="sync-row">
-      <span class="sync-status" id="syncStatus">기기에 저장됨</span>
-      <button class="link-btn" onclick="toggleSettings()">구글시트 연동 설정</button>
+      <span class="sync-status" id="syncStatus">이 기기에 저장됨</span>
+      <button class="link-btn" onclick="toggleSettings()">구글시트 연동</button>
     </div>
     <div class="settings-panel" id="settingsPanel">
-      <input id="sheetUrl" placeholder="Apps Script 웹앱 URL 붙여넣기" />
+      <input id="sheetUrl" placeholder="Apps Script 웹앱 주소 붙여넣기" />
       <div class="settings-hint">
-        구글시트 한 칸에 재료를 한 줄씩 적어두고, Apps Script를 웹앱으로 배포한 뒤 그 URL을 여기 넣으면 자동으로 불러오고 저장해요.
-        아래 안내 코드로 배포하면 됩니다.
+        구글시트 A열에 재료를 한 줄씩 적어두고, Apps Script를 웹앱으로 배포한 뒤 그 주소를 넣으면 자동으로 불러와요.
       </div>
-      <div class="add-row" style="margin-top:10px;">
+      <div class="add-row" style="flex-wrap:wrap;">
         <button class="btn-small" onclick="saveSheetUrl()">저장하고 불러오기</button>
-        <button class="btn-small" style="background:var(--ink-soft)" onclick="pushToSheet()">지금 시트로 내보내기</button>
+        <button class="btn-small" style="background:var(--field);border-color:var(--field-deep);box-shadow:0 2px 0 var(--field-deep);" onclick="pushToSheet()">시트로 내보내기</button>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>⏰ 오늘 상황</h2>
-    <div class="chip-row" id="timeChips"></div>
-    <div class="chip-row" id="peopleChips" style="margin-top:10px;"></div>
-    <div class="chip-row" id="moodChips" style="margin-top:10px;"></div>
+    <span class="corner c-cheese c-tr" style="width:46px;height:36px;transform:rotate(-12deg);" aria-hidden="true"><i></i></span>
+    <span class="corner c-cucumber c-bl" style="width:42px;height:42px;" aria-hidden="true"><i></i></span>
+    <h2>⏰ 오늘 컨디션</h2>
+    <div class="situation-group">
+      <div class="group-label">시간</div>
+      <div class="chip-row" id="timeChips"></div>
+    </div>
+    <div class="situation-group">
+      <div class="group-label">오늘의 목표</div>
+      <div class="chip-row" id="goalChips"></div>
+    </div>
+    <div class="situation-group">
+      <div class="group-label">조리 방식</div>
+      <div class="chip-row" id="methodChips"></div>
+    </div>
+    <div class="situation-group">
+      <div class="group-label">탄수화물</div>
+      <div class="chip-row" id="carbChips"></div>
+    </div>
   </div>
 
-  <button class="cta" id="ctaBtn" onclick="getRecommendation()">오늘 저녁 추천받기</button>
+  <button class="cta" id="ctaBtn" onclick="getRecommendation()"><span id="ctaLabel">오늘 저녁 골라줘!</span></button>
 
   <div id="results"></div>
 </div>
 
 <script>
-const TIME_OPTS = ['시간 여유있음','30분 이내','초스피드'];
-const PEOPLE_OPTS = ['혼밥','2인','3인 이상'];
-const MOOD_OPTS = ['얼큰하게','든든하게','가볍게','특별하게'];
+const TIME_OPTS   = ['시간 여유있음','30분 이내','초스피드'];
+const GOAL_OPTS   = ['단백질 위주','채소 많이','가볍게','든든하게'];
+const METHOD_OPTS = ['끓이기','볶기·굽기','찌기','불 안 쓰고'];
+const CARB_OPTS   = ['밥','면','빵·기타','탄수 없이'];
 
 let ingredients = [];
-let selected = { time: null, people: null, mood: null };
+let selected = { time:null, goal:null, method:null, carb:null };
 let sheetUrl = '';
 
 function renderChips(containerId, options, group){
@@ -154,7 +460,10 @@ function renderChips(containerId, options, group){
     const b = document.createElement('button');
     b.className = 'chip' + (selected[group]===opt ? ' on' : '');
     b.textContent = opt;
-    b.onclick = ()=>{ selected[group] = opt; renderChips(containerId, options, group); };
+    b.onclick = ()=>{
+      selected[group] = (selected[group]===opt) ? null : opt;
+      renderChips(containerId, options, group);
+    };
     el.appendChild(b);
   });
 }
@@ -163,7 +472,7 @@ function renderIngredients(){
   const el = document.getElementById('ingredientChips');
   el.innerHTML = '';
   if(ingredients.length===0){
-    el.innerHTML = '<span class="empty">아직 등록된 재료가 없어요</span>';
+    el.innerHTML = '<span class="empty onpaper">아직 담아둔 재료가 없어요</span>';
     return;
   }
   ingredients.forEach((ing,idx)=>{
@@ -185,11 +494,14 @@ async function addIngredient(){
   renderIngredients();
 }
 
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && document.activeElement.id==='newIngredient') addIngredient();
+});
+
 async function saveIngredients(){
-  try{
-    await window.storage.set('ingredients', JSON.stringify(ingredients), false);
-  }catch(e){ console.error('저장 실패', e); }
-  document.getElementById('syncStatus').textContent = '기기에 저장됨';
+  try{ await window.storage.set('ingredients', JSON.stringify(ingredients), false); }
+  catch(e){ console.error(e); }
+  document.getElementById('syncStatus').textContent = '이 기기에 저장됨';
   if(sheetUrl) pushToSheet();
 }
 
@@ -231,12 +543,12 @@ async function pullFromSheet(){
     const data = await res.json();
     if(Array.isArray(data.ingredients)){
       ingredients = data.ingredients;
-      await window.storage.set('ingredients', JSON.stringify(ingredients), false);
+      try{ await window.storage.set('ingredients', JSON.stringify(ingredients), false); }catch(e){}
       renderIngredients();
       document.getElementById('syncStatus').textContent = '구글시트와 연동됨';
     }
   }catch(e){
-    document.getElementById('syncStatus').textContent = '시트 연동 실패 (URL 확인)';
+    document.getElementById('syncStatus').textContent = '시트 주소를 확인해주세요';
   }
 }
 
@@ -250,7 +562,7 @@ async function pushToSheet(){
     });
     document.getElementById('syncStatus').textContent = '구글시트에 저장됨';
   }catch(e){
-    document.getElementById('syncStatus').textContent = '시트 저장 실패';
+    document.getElementById('syncStatus').textContent = '시트 저장에 실패했어요';
   }
 }
 
@@ -259,25 +571,30 @@ async function getRecommendation(){
   const resultsEl = document.getElementById('results');
 
   if(ingredients.length===0){
-    resultsEl.innerHTML = '<div class="empty">재료를 먼저 몇 개 추가해주세요</div>';
+    resultsEl.innerHTML = '<div class="empty">재료를 먼저 몇 개 담아주세요</div>';
     return;
   }
-  if(!selected.time || !selected.people || !selected.mood){
-    resultsEl.innerHTML = '<div class="empty">오늘 상황을 모두 골라주세요</div>';
+  if(!selected.time || !selected.goal || !selected.method || !selected.carb){
+    resultsEl.innerHTML = '<div class="empty">오늘 컨디션을 모두 골라주세요</div>';
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = '추천 받는 중...';
-  resultsEl.innerHTML = '';
+  document.getElementById('ctaLabel').textContent = '고르는 중...';
+  resultsEl.innerHTML = '<div class="loading">냉장고 뒤지는 중<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>';
 
   const prompt = `집에 있는 재료: ${ingredients.join(', ')}
-오늘 상황: 시간은 "${selected.time}", 먹는 사람은 "${selected.people}", 원하는 느낌은 "${selected.mood}"
+오늘 조건:
+- 조리 시간: ${selected.time}
+- 오늘의 목표: ${selected.goal}
+- 조리 방식: ${selected.method}
+- 탄수화물: ${selected.carb}
 
-이 재료들을 최대한 활용해서 오늘 저녁에 만들 수 있는 메뉴 3가지를 추천해줘.
+이 재료들을 최대한 활용해서 위 조건에 맞는 저녁 메뉴 3가지를 추천해줘.
+"탄수 없이"를 골랐으면 밥·면·빵을 쓰지 않는 메뉴로, "불 안 쓰고"를 골랐으면 가열 없이 되는 메뉴로 제안해.
 반드시 아래 JSON 배열 형식으로만 답해. 다른 설명이나 마크다운 코드블럭 없이 순수 JSON만.
 [
-  {"name":"메뉴 이름", "reason":"이 상황과 재료에 왜 어울리는지 한 두 문장", "missing":["부족한 재료1","부족한 재료2"]},
+  {"name":"메뉴 이름", "reason":"이 조건과 재료에 왜 어울리는지 한 두 문장", "missing":["부족한 재료1"]},
   ...
 ]
 missing은 집에 없어서 사야 하는 재료만 적고, 없으면 빈 배열로.`;
@@ -302,24 +619,26 @@ missing은 집에 없어서 사야 하는 재료만 적고, 없으면 빈 배열
       const card = document.createElement('div');
       card.className = 'result-card';
       const missingText = (m.missing && m.missing.length>0)
-        ? `<div class="missing">🛒 필요: ${m.missing.join(', ')}</div>`
-        : `<div class="missing" style="color:var(--sage)">✓ 지금 있는 재료로 바로 가능</div>`;
-      card.innerHTML = `<h3>${m.name}</h3><p>${m.reason}</p>${missingText}`;
+        ? `<div class="missing">🛒 사야 해요 — ${m.missing.join(', ')}</div>`
+        : `<div class="missing ok">✓ 지금 있는 걸로 바로 가능!</div>`;
+      card.innerHTML =
+        `<div class="result-inner"><h3>${m.name}</h3><p>${m.reason}</p>${missingText}</div>`;
       resultsEl.appendChild(card);
     });
   }catch(e){
-    resultsEl.innerHTML = '<div class="empty">추천을 받아오지 못했어요. 다시 시도해주세요.</div>';
+    resultsEl.innerHTML = '<div class="empty">추천을 받아오지 못했어요. 한 번만 더 눌러주세요.</div>';
     console.error(e);
   }finally{
     btn.disabled = false;
-    btn.textContent = '오늘 저녁 추천받기';
+    document.getElementById('ctaLabel').textContent = '오늘 저녁 골라줘!';
   }
 }
 
 (async function init(){
-  renderChips('timeChips', TIME_OPTS, 'time');
-  renderChips('peopleChips', PEOPLE_OPTS, 'people');
-  renderChips('moodChips', MOOD_OPTS, 'mood');
+  renderChips('timeChips',   TIME_OPTS,   'time');
+  renderChips('goalChips',   GOAL_OPTS,   'goal');
+  renderChips('methodChips', METHOD_OPTS, 'method');
+  renderChips('carbChips',   CARB_OPTS,   'carb');
   await loadSheetUrl();
   if(sheetUrl){ await pullFromSheet(); } else { await loadIngredients(); }
 })();
